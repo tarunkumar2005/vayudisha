@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   parseCpcbTimestamp,
   CpcbApiResponseSchema,
   fetchCpcbData,
+  clearCpcbCache,
 } from '@/lib/aqi/cpcb-client';
 import {
   MOCK_DELHI_SMOG_CPCB_RESPONSE,
@@ -27,6 +28,9 @@ describe('CPCB Timestamp Parsing', () => {
 });
 
 describe('CPCB Response Schema & Processing', () => {
+  beforeEach(() => {
+    clearCpcbCache();
+  });
   it('validates a real Delhi smog CPCB response against Zod schema', () => {
     const parsed = CpcbApiResponseSchema.safeParse(MOCK_DELHI_SMOG_CPCB_RESPONSE);
     expect(parsed.success).toBe(true);

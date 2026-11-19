@@ -139,16 +139,33 @@ const MAX_RECORDS_PER_REQUEST = 500;
 const STALE_THRESHOLD_HOURS = 6;
 const REQUEST_TIMEOUT_MS = 15_000;
 
+// In-memory server-side cache for CPCB telemetry (CPCB updates hourly)
+interface CpcbCacheEntry {
+  data: CpcbDataResult;
+  cachedAt: number;
+}
+const cpcbMemoryCache = new Map<string, CpcbCacheEntry>();
+const CPCB_CACHE_TTL_MS = 15 * 60 * 1000; // 15-minute fresh cache
+
+/** Clear memory cache (useful for tests) */
+export function clearCpcbCache(): void {
+  cpcbMemoryCache.clear();
+}
+
 // --- Client ---
 
 export interface CpcbClientOptions {
   apiKey: string;
+  /** Optional specific station filter (e.g. "Anand Vihar, Delhi - DPCC") */
+  station?: string;
   /** Override base URL for testing */
   baseUrl?: string;
   /** Override timeout for testing */
   timeoutMs?: number;
   /** Override maximum record limit */
   limit?: number;
+  /** Force bypass cache */
+  skipCache?: boolean;
 }
 
 /**
@@ -162,6 +179,15 @@ export async function fetchCpcbData(
   city: string,
   options: CpcbClientOptions
 ): Promise<CpcbDataResult> {
+  const cacheKey = `${city.toLowerCase()}:${options.station?.toLowerCase() ?? 'all'}:${options.limit ?? MAX_RECORDS_PER_REQUEST}`;
+  const now = Date.now();
+  const cached = cpcbMemoryCache.get(cacheKey);
+
+  // Return fresh in-memory cache (< 15 mins old) to prevent burning data.gov.in rate limits
+  if (!options.skipCache && cached && (now - cached.cachedAt < CPCB_CACHE_TTL_MS)) {
+    return cached.data;
+  }
+
   const baseUrl = options.baseUrl ?? CPCB_BASE_URL;
   const timeout = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
 
@@ -170,6 +196,9 @@ export async function fetchCpcbData(
   url.searchParams.set('format', 'json');
   url.searchParams.set('limit', (options.limit ?? MAX_RECORDS_PER_REQUEST).toString());
   url.searchParams.set('filters[city]', city);
+  if (options.station) {
+    url.searchParams.set('filters[station]', options.station);
+  }
 
   try {
     const controller = new AbortController();
@@ -203,10 +232,16 @@ export async function fetchCpcbData(
       }
 
       if (response.status === 429) {
+        if (cached && cached.data.stations.length > 0) {
+          return {
+            ...cached.data,
+            statusDetails: 'data.gov.in rate limit active (HTTP 429). Serving cached CPCB station readings.',
+          };
+        }
         return makeErrorResult(
           errorMsg,
           'rate_limited',
-          'Rate limit exceeded on data.gov.in endpoint (HTTP 429).'
+          'Rate limit exceeded on data.gov.in endpoint (HTTP 429). The free government API tier limits rapid queries.'
         );
       }
 
@@ -232,7 +267,11 @@ export async function fetchCpcbData(
     const apiData = parseResult.data;
 
     // Process and group records by station
-    return processRecords(apiData);
+    const processed = processRecords(apiData);
+    if (processed.apiAvailable && processed.stations.length > 0) {
+      cpcbMemoryCache.set(cacheKey, { data: processed, cachedAt: now });
+    }
+    return processed;
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
       return makeErrorResult(

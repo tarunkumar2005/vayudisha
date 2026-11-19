@@ -4,6 +4,8 @@ export interface CityInfo {
     en: string;
     hi: string;
   };
+  /** Official city name used in CPCB / data.gov.in database queries */
+  cpcbCityName?: string;
   state: string;
   latitude: number;
   longitude: number;
@@ -14,6 +16,7 @@ export const SUPPORTED_CITIES: CityInfo[] = [
   {
     id: 'delhi',
     name: { en: 'Delhi NCR', hi: 'दिल्ली एनसीआर' },
+    cpcbCityName: 'Delhi',
     state: 'Delhi',
     latitude: 28.6139,
     longitude: 77.209,

@@ -147,7 +147,18 @@ export async function getUnifiedAqi(
     };
   } else if (apiKey) {
     try {
-      cpcbResult = await fetchCpcbData(city.name.en, { apiKey });
+      const cpcbQueryCity = city.cpcbCityName || city.name.en;
+      const keyStation = city.keyStations?.[0];
+      if (keyStation) {
+        // Query specific key station first: data.gov.in returns all pollutants in 1 page (<=10 items)
+        // when filtered by station, whereas querying by city alone only returns the first 10 random rows.
+        cpcbResult = await fetchCpcbData(cpcbQueryCity, { apiKey, station: keyStation });
+        if (!cpcbResult.apiAvailable || cpcbResult.stations.length === 0) {
+          cpcbResult = await fetchCpcbData(cpcbQueryCity, { apiKey });
+        }
+      } else {
+        cpcbResult = await fetchCpcbData(cpcbQueryCity, { apiKey });
+      }
     } catch (e) {
       console.warn('CPCB fetch threw exception:', e);
     }
