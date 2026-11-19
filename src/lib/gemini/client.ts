@@ -18,7 +18,8 @@ import {
   validateAndCleanAiResponse,
 } from './sanitizer';
 
-const GEMINI_MODEL = 'gemini-3.8-flash';
+const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const FALLBACK_MODEL = 'gemini-3.5-flash-lite';
 
 const SYSTEM_INSTRUCTION = `You are SaansSaathi (साँस साथी - "Breath Companion"), an empathetic, scientifically grounded urban air quality advisor for families in India navigating severe winter smog.
 
@@ -94,24 +95,58 @@ Produce a warm, practical JSON response matching this schema:
 }
 `;
 
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: userPrompt,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: 'application/json',
-        temperature: 0.2, // Low temperature for factual precision
-      },
-    });
+    let responseText = '';
+    let usedModel = PRIMARY_MODEL;
 
-    const rawOutput = response.text?.trim() || '';
-    const validation = validateAndCleanAiResponse(rawOutput);
+    try {
+      const response = await ai.models.generateContent({
+        model: PRIMARY_MODEL,
+        contents: userPrompt,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: 'application/json',
+          temperature: 0.2, // Low temperature for factual precision
+        },
+      });
+      responseText = response.text?.trim() || '';
+    } catch (primaryErr: unknown) {
+      const errObj = primaryErr as { status?: number; code?: number; error?: { code?: number } };
+      const status = errObj?.status || errObj?.code || errObj?.error?.code;
+      const isTransient = status === 503 || status === 429;
+
+      console.warn(
+        `Gemini primary model (${PRIMARY_MODEL}) ${isTransient ? `temporarily unavailable (HTTP ${status})` : 'failed'}. Attempting fallback to ${FALLBACK_MODEL}...`
+      );
+
+      try {
+        const fallbackRes = await ai.models.generateContent({
+          model: FALLBACK_MODEL,
+          contents: userPrompt,
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        });
+        responseText = fallbackRes.text?.trim() || '';
+        usedModel = FALLBACK_MODEL;
+      } catch (fallbackErr) {
+        console.warn('Gemini fallback model also failed. Engaging deterministic bilingual fallback.');
+        return {
+          isAiGenerated: false,
+          data: createDeterministicFallback(context),
+          fallbackReason: `Gemini API temporary capacity spike (HTTP ${status ?? 'error'}). Served verified static guidance.`,
+        };
+      }
+    }
+
+    const validation = validateAndCleanAiResponse(responseText);
 
     if (validation.success) {
       return {
         isAiGenerated: true,
         data: validation.data,
-        modelUsed: GEMINI_MODEL,
+        modelUsed: usedModel,
       };
     }
 
