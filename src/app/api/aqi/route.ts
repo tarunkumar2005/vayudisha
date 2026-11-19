@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const city = searchParams.get('city') || 'delhi';
+    const rawCity = searchParams.get('city') || 'delhi';
+    // Validate and sanitize city parameter to prevent cache key pollution
+    const city = rawCity.slice(0, 50).replace(/[^a-zA-Z0-9_\-\s]/g, '').trim() || 'delhi';
 
     const aqiData = await getUnifiedAqi(city);
 
@@ -43,8 +45,16 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('AQI API route error:', error);
     return NextResponse.json(
-      { error: 'Failed to retrieve air quality data', details: String(error) },
-      { status: 500 }
+      { error: 'Failed to retrieve air quality data. Please try again shortly.' },
+      {
+        status: 500,
+        headers: {
+          // Errors must NEVER be cached by the CDN
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'X-RateLimit-Limit': String(RATE_LIMIT.limit),
+          'X-RateLimit-Remaining': String(rl.remaining),
+        },
+      }
     );
   }
 }

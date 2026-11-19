@@ -40,6 +40,8 @@ export default function ImpactPage() {
   const [calcResult, setCalcResult] = useState<ModalShiftCalculationResult | null>(null);
   const [inversionGuidance, setInversionGuidance] = useState<InversionWindowGuidance | null>(null);
 
+  const currentAqi = aqiData?.current?.aqi;
+
   useEffect(() => {
     const res = calculateModalShiftImpact({
       currentMode: currentMode as keyof typeof INDIAN_TRANSPORT_EMISSION_FACTORS,
@@ -48,8 +50,8 @@ export default function ImpactPage() {
       tripsPerWeek,
     });
     setCalcResult(res);
-    setInversionGuidance(getThermalInversionGuidance(aqiData?.current?.aqi));
-  }, [currentMode, altMode, distanceKm, tripsPerWeek, aqiData?.current?.aqi]);
+    setInversionGuidance(getThermalInversionGuidance(currentAqi));
+  }, [currentMode, altMode, distanceKm, tripsPerWeek, currentAqi]);
 
   const chartData = calcResult
     ? [

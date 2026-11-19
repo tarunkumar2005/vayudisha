@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { type Language } from '@/lib/i18n/translations';
 import { type DemographicProfile } from '@/lib/rules/safety-rules';
 import { type UnifiedAqiPayload } from '@/lib/aqi/aqi-merger';
@@ -77,7 +77,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [profile]);
 
   // Fetch unified AQI whenever city changes
-  const refreshAqi = async () => {
+  const refreshAqi = useCallback(async () => {
     setIsLoadingAqi(true);
     try {
       const res = await fetch(`/api/aqi?city=${encodeURIComponent(selectedCity)}`);
@@ -90,11 +90,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoadingAqi(false);
     }
-  };
+  }, [selectedCity]);
 
   useEffect(() => {
     refreshAqi();
-  }, [selectedCity]);
+  }, [refreshAqi]);
 
   return (
     <AppContext.Provider

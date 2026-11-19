@@ -91,15 +91,24 @@ const COMMUNITY_ACTIONS = [
 
 // Community plan: 30 req/min per IP
 const RATE_LIMIT = { limit: 30, windowMs: 60_000 };
+const MAX_PAYLOAD_BYTES = 32 * 1024; // 32 KB payload cap
 
 export async function POST(request: NextRequest) {
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+    return NextResponse.json(
+      { error: 'Payload too large. Maximum allowed size is 32 KB.' },
+      { status: 413, headers: { 'Cache-Control': 'no-store' } }
+    );
+  }
+
   const clientKey = `community:${getClientKey(request)}`;
   const rl = checkRateLimit(clientKey, RATE_LIMIT);
 
   if (!rl.allowed) {
     return NextResponse.json(
       { error: 'Too many requests.' },
-      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)), 'Cache-Control': 'no-store' } }
     );
   }
 
@@ -165,8 +174,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Community plan error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate community action plan', details: String(error) },
-      { status: 500 }
+      { error: 'Failed to generate community action plan. Please try again shortly.' },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }

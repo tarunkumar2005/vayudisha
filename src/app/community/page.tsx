@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import {
   Printer,
@@ -32,7 +32,7 @@ export default function CommunityPage() {
   const [quickWins, setQuickWins] = useState<string[]>([]);
   const [copied, setCopied] = useState<boolean>(false);
 
-  const fetchCommunityPlan = async () => {
+  const fetchCommunityPlan = useCallback(async () => {
     try {
       const res = await fetch('/api/community', {
         method: 'POST',
@@ -52,11 +52,11 @@ export default function CommunityPage() {
     } catch (err) {
       console.error('Failed to load community plan:', err);
     }
-  };
+  }, [selectedCity, communityName, language]);
 
   useEffect(() => {
     fetchCommunityPlan();
-  }, [selectedCity, communityName, language]);
+  }, [fetchCommunityPlan]);
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {

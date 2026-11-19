@@ -19,14 +19,24 @@ const ImpactRequestSchema = z.object({
   tripsPerWeek: z.number().min(1).max(28).default(10),
 });
 
+const MAX_PAYLOAD_BYTES = 32 * 1024; // 32 KB payload limit
+
 export async function POST(request: NextRequest) {
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+    return NextResponse.json(
+      { error: 'Payload too large. Maximum allowed size is 32 KB.' },
+      { status: 413, headers: { 'Cache-Control': 'no-store' } }
+    );
+  }
+
   const clientKey = `impact:${getClientKey(request)}`;
   const rl = checkRateLimit(clientKey, RATE_LIMIT);
 
   if (!rl.allowed) {
     return NextResponse.json(
       { error: 'Too many requests.' },
-      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)), 'Cache-Control': 'no-store' } }
     );
   }
 
@@ -66,8 +76,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Impact calculation error:', error);
     return NextResponse.json(
-      { error: 'Failed to calculate impact', details: String(error) },
-      { status: 500 }
+      { error: 'Failed to calculate impact. Please verify input parameters.' },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }

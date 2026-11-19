@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import { ActivitySafetyCard } from '@/components/routine/ActivitySafetyCard';
 import { type ActivityGuidance, type BudgetTier, type DemographicProfile } from '@/lib/rules/safety-rules';
@@ -42,7 +42,7 @@ export default function PlannerPage() {
   const [isAiGenerated, setIsAiGenerated] = useState<boolean>(false);
 
   // Fetch recommendations whenever profile, city, or language changes
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await fetch('/api/recommendations', {
@@ -67,11 +67,11 @@ export default function PlannerPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedCity, language, profile]);
 
   useEffect(() => {
     fetchRecommendations();
-  }, [selectedCity, language, profile]);
+  }, [fetchRecommendations]);
 
   const filteredRecs = recommendations.filter((r) => {
     if (selectedBudgetTab === 'all') return true;
