@@ -84,22 +84,22 @@ export const INDIAN_TRANSPORT_EMISSION_FACTORS: Record<string, EmissionFactorEnt
     mode: 'metro_rail',
     label: { en: 'Metro Rail (Electric Transit)', hi: 'मेट्रो रेल (इलेक्ट्रिक)' },
     gCo2ePerPassengerKm: 28,
-    source: 'Delhi Metro Rail Corporation (DMRC) Verified Carbon Offset Filing',
+    source: 'Delhi Metro Rail Corporation (DMRC) Verified Carbon Offset Filing & CEA CO2 Database',
     sourceUrl: 'https://www.delhimetrorail.com/',
     assumptions: {
-      en: 'DMRC audited lifecycle operational energy consumption factoring in solar captive power and regenerative braking.',
-      hi: 'सौर ऊर्जा और रीजेनरेटिव ब्रेकिंग को शामिल करते हुए डीएमआरसी का प्रमाणित कार्बन फुटप्रिंट।',
+      en: 'DMRC audited lifecycle operational energy consumption. Incorporates Central Electricity Authority (CEA) national grid emission factor (~716 g CO2/kWh), captive rooftop solar power, and regenerative train braking.',
+      hi: 'केंद्रीय विद्युत प्राधिकरण (सीईए) के राष्ट्रीय ग्रिड उत्सर्जन कारक (~716 ग्राम CO2/kWh), सौर ऊर्जा और रीजेनरेटिव ब्रेकिंग को शामिल करते हुए डीएमआरसी का प्रमाणित कार्बन फुटप्रिंट।',
     },
   },
   e_rickshaw: {
     mode: 'e_rickshaw',
     label: { en: 'E-Rickshaw / Electric 3-Wheeler', hi: 'ई-रिक्शा / इलेक्ट्रिक थ्री-व्हीलर' },
     gCo2ePerPassengerKm: 16,
-    source: 'WRI India Electric Mobility Well-to-Wheel Assessment',
+    source: 'WRI India Electric Mobility Well-to-Wheel Assessment (CEA Grid Baseline)',
     sourceUrl: 'https://wri-india.org/',
     assumptions: {
-      en: 'Zero tailpipe emissions. Value accounts for well-to-wheel upstream electricity generation emissions on India’s national grid.',
-      hi: 'कोई टेलपाइप धुआं नहीं। यह आंकड़ा भारतीय पावर ग्रिड की बिजली उत्पादन प्रक्रिया के प्रभाव को जोड़कर है।',
+      en: 'Zero direct tailpipe emissions. Well-to-wheel calculation accounts for Indian Central Electricity Authority grid factor (~716 g CO2/kWh) for battery charging.',
+      hi: 'कोई प्रत्यक्ष टेलपाइप धुआं नहीं। यह आंकड़ा भारतीय सीईए ग्रिड उत्सर्जन कारक (~716 ग्राम CO2/kWh) से बैटरी चार्जिंग के प्रभाव को जोड़कर है।',
     },
   },
   cycling_walking: {
@@ -190,7 +190,8 @@ export function calculateModalShiftImpact(
 
 /**
  * Smog Inversion Window Guidance
- * Demonstrates the physical timing effect of thermal inversion without false medical dose claims.
+ * Demonstrates the physical timing effect of thermal inversion without false medical claims.
+ * Conditioned on actual/current AQI severity in accordance with the October 2025 MoHFW/NCDC advisory.
  */
 export interface InversionWindowGuidance {
   worstHours: {
@@ -204,25 +205,38 @@ export interface InversionWindowGuidance {
   disclaimer: { en: string; hi: string };
 }
 
-export function getThermalInversionGuidance(): InversionWindowGuidance {
+export function getThermalInversionGuidance(currentAqi?: number | null): InversionWindowGuidance {
+  const isSevere = currentAqi != null && currentAqi > 400;
+  const isVeryPoor = currentAqi != null && currentAqi > 300;
+
   return {
     worstHours: {
       timeRange: '6:00 AM – 9:00 AM & 8:00 PM – 11:00 PM',
       reason: {
-        en: 'Radiation thermal inversion traps vehicular exhaust and biomass smoke within the lowest 50–100 meters of the atmosphere during cold, still hours.',
-        hi: 'सर्दियों में सुबह और रात को ठंडी हवा जमीन के पास भारी होकर धुएं और प्रदूषण को नीचे ही रोक लेती है।',
+        en: 'Radiation thermal inversion traps vehicular exhaust, road dust, and smoke within a shallow surface boundary layer (50–100 m) during cold, stagnant hours.',
+        hi: 'सर्दियों में सुबह और रात को ठंडी हवा जमीन के पास भारी होकर धुएं और प्रदूषण को नीचे ही रोक लेती है (थर्मल इनवर्जन)।',
       },
     },
     preferredHours: {
-      timeRange: '1:00 PM – 4:00 PM',
+      timeRange: isSevere
+        ? 'Avoid outdoor exposure all day (MoHFW/NCDC)'
+        : '1:00 PM – 4:00 PM (Subject to real-time AQI check)',
       reason: {
-        en: 'Solar warming breaks down the thermal inversion layer and deepens the atmospheric boundary mixing height, dispersing concentrated ground particulates.',
-        hi: 'दोपहर में धूप निकलने से हवा गर्म होकर ऊपर उठती है, जिससे जमीन के पास प्रदूषण का असर अपेक्षाकृत कम होता है।',
+        en: isSevere
+          ? 'CRITICAL ADVISORY (Severe Smog): While solar heating deepens boundary layer mixing in the afternoon, ambient AQI remains hazardous. The MoHFW/NCDC advisory urges vulnerable groups (children, elderly, respiratory/cardiac patients) to avoid all non-essential outdoor exposure regardless of the hour.'
+          : isVeryPoor
+            ? 'CAUTION (Very Poor AQI): Solar heating improves vertical mixing, offering relative dispersion compared to dawn/night peaks. However, pollution levels remain elevated. Keep any unavoidable outdoor transit brief and verify local station readings.'
+            : 'Solar warming breaks down nocturnal surface inversion and deepens atmospheric boundary mixing height, offering relatively lower particulate concentration compared to early morning and late night. Check real-time AQI before planning outdoor transit.',
+        hi: isSevere
+          ? 'महत्वपूर्ण सलाह (गंभीर स्मॉग): दोपहर में धूप से प्रदूषण थोड़ा बिखरता है, लेकिन हवा फिर भी खतरनाक स्तर पर बनी रहती है। MoHFW/NCDC सलाह के अनुसार कमजोर वर्गों को दिन भर बाहर जाने से बचना चाहिए।'
+          : isVeryPoor
+            ? 'सावधानी (बहुत खराब वायु गुणवत्ता): दोपहर में सुबह की तुलना में प्रदूषण का दबाव कुछ कम होता है, लेकिन स्तर अब भी हानिकारक रहता है। केवल जरूरी काम ही करें और स्थानीय AQI जांचें।'
+            : 'दोपहर में धूप निकलने से इनवर्जन लेयर टूटती है और प्रदूषण ऊपर उठता है, जिससे जमीन के पास सांद्रता अपेक्षाकृत कम होती है। बाहर जाने से पहले वास्तविक समय का AQI जरूर जांचें।',
       },
     },
     disclaimer: {
-      en: 'Shifting outdoor errands to afternoon hours leverages atmospheric dispersion physics. This is an exposure-avoidance strategy and does not claim medical dose elimination.',
-      hi: 'दोपहर के समय काम निपटाना वायुमंडलीय नियमों पर आधारित है। यह धुएं के सीधे संपर्क से बचने का व्यावहारिक तरीका है।',
+      en: 'Afternoon boundary-layer dispersion provides relative dilution, not absolute clean air. In severe winter smog episodes, afternoon air can remain heavily polluted. Always cross-reference real-time AQI data and prioritize exposure reduction as per the October 2025 MoHFW/NCDC advisory.',
+      hi: 'दोपहर का वायुमंडलीय फैलाव केवल तुलनात्मक राहत देता है, यह हवा के पूरी तरह स्वच्छ होने की गारंटी नहीं है। MoHFW/NCDC सलाह के अनुसार हमेशा वास्तविक AQI जांचें और धुएं के संपर्क से बचें।',
     },
   };
 }

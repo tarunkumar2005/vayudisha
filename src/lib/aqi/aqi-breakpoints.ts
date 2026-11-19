@@ -1,11 +1,22 @@
 /**
  * CPCB National AQI Breakpoint Table
- * Source: Central Pollution Control Board, India
- * Reference: https://cpcb.nic.in/National-Air-Quality-Index/
+ * Source: Central Pollution Control Board (CPCB), Ministry of Environment, Forest and Climate Change (MoEFCC), India
+ * Reference: National Air Quality Index Report (CPCB, 2014)
  *
  * Each pollutant has concentration breakpoints mapped to AQI sub-index ranges.
- * The overall AQI = max(all sub-indices).
- * Minimum 3 valid pollutants required, including at least one of PM2.5 or PM10.
+ * The overall AQI = max(all valid sub-indices).
+ *
+ * CRITICAL REGULATORY RULES:
+ * 1. Averaging Periods:
+ *    - PM2.5, PM10, NO2, SO2, NH3, Pb use 24-hour regulatory averages.
+ *    - CO and O3 use 8-hour regulatory averages.
+ * 2. Data Completeness Rule (CPCB Section 3.2):
+ *    - Minimum 16 hours of monitoring data required for 24-hour average sub-indices.
+ *    - Minimum 6 hours of monitoring data required for 8-hour average sub-indices.
+ * 3. Aggregation Rule:
+ *    - Minimum 3 valid pollutant sub-indices required.
+ *    - At least one must be PM2.5 or PM10.
+ *    - If criteria are not met, overall AQI is "Data Insufficient" (null).
  */
 
 export type PollutantId =
@@ -48,7 +59,9 @@ export interface PollutantMeta {
   id: PollutantId;
   name: { en: string; hi: string };
   unit: string;
-  averagingPeriod: string;
+  averagingPeriod: '24-hour' | '8-hour';
+  requiredAveragingHours: number;
+  minimumDataCompletenessHours: number; // 16 for 24-hr, 6 for 8-hr
   /** Whether this counts as a PM pollutant for the minimum-data rule */
   isPM: boolean;
   breakpoints: BreakpointEntry[];
@@ -121,11 +134,10 @@ export const AQI_CATEGORIES: AqiCategoryInfo[] = [
 ];
 
 /**
- * CPCB Breakpoint table for each pollutant.
- * Concentration units match CPCB standard:
- *   PM2.5, PM10, NO2, SO2, O3, NH3 → µg/m³
+ * Official CPCB Breakpoint table for all 8 pollutants.
+ * Units:
+ *   PM2.5, PM10, NO2, SO2, O3, NH3, Pb → µg/m³
  *   CO → mg/m³
- *   Pb → µg/m³
  */
 export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
   {
@@ -133,14 +145,16 @@ export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
     name: { en: 'PM2.5', hi: 'पीएम2.5' },
     unit: 'µg/m³',
     averagingPeriod: '24-hour',
+    requiredAveragingHours: 24,
+    minimumDataCompletenessHours: 16,
     isPM: true,
     breakpoints: [
       { aqiLow: 0, aqiHigh: 50, concLow: 0, concHigh: 30 },
-      { aqiLow: 51, aqiHigh: 100, concLow: 31, concHigh: 60 },
-      { aqiLow: 101, aqiHigh: 200, concLow: 61, concHigh: 90 },
-      { aqiLow: 201, aqiHigh: 300, concLow: 91, concHigh: 120 },
-      { aqiLow: 301, aqiHigh: 400, concLow: 121, concHigh: 250 },
-      { aqiLow: 401, aqiHigh: 500, concLow: 251, concHigh: 500 },
+      { aqiLow: 51, aqiHigh: 100, concLow: 30, concHigh: 60 },
+      { aqiLow: 101, aqiHigh: 200, concLow: 60, concHigh: 90 },
+      { aqiLow: 201, aqiHigh: 300, concLow: 90, concHigh: 120 },
+      { aqiLow: 301, aqiHigh: 400, concLow: 120, concHigh: 250 },
+      { aqiLow: 401, aqiHigh: 500, concLow: 250, concHigh: 500 },
     ],
   },
   {
@@ -148,14 +162,16 @@ export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
     name: { en: 'PM10', hi: 'पीएम10' },
     unit: 'µg/m³',
     averagingPeriod: '24-hour',
+    requiredAveragingHours: 24,
+    minimumDataCompletenessHours: 16,
     isPM: true,
     breakpoints: [
       { aqiLow: 0, aqiHigh: 50, concLow: 0, concHigh: 50 },
-      { aqiLow: 51, aqiHigh: 100, concLow: 51, concHigh: 100 },
-      { aqiLow: 101, aqiHigh: 200, concLow: 101, concHigh: 250 },
-      { aqiLow: 201, aqiHigh: 300, concLow: 251, concHigh: 350 },
-      { aqiLow: 301, aqiHigh: 400, concLow: 351, concHigh: 430 },
-      { aqiLow: 401, aqiHigh: 500, concLow: 431, concHigh: 600 },
+      { aqiLow: 51, aqiHigh: 100, concLow: 50, concHigh: 100 },
+      { aqiLow: 101, aqiHigh: 200, concLow: 100, concHigh: 250 },
+      { aqiLow: 201, aqiHigh: 300, concLow: 250, concHigh: 350 },
+      { aqiLow: 301, aqiHigh: 400, concLow: 350, concHigh: 430 },
+      { aqiLow: 401, aqiHigh: 500, concLow: 430, concHigh: 600 },
     ],
   },
   {
@@ -163,14 +179,16 @@ export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
     name: { en: 'NO₂', hi: 'नाइट्रोजन डाइऑक्साइड' },
     unit: 'µg/m³',
     averagingPeriod: '24-hour',
+    requiredAveragingHours: 24,
+    minimumDataCompletenessHours: 16,
     isPM: false,
     breakpoints: [
       { aqiLow: 0, aqiHigh: 50, concLow: 0, concHigh: 40 },
-      { aqiLow: 51, aqiHigh: 100, concLow: 41, concHigh: 80 },
-      { aqiLow: 101, aqiHigh: 200, concLow: 81, concHigh: 180 },
-      { aqiLow: 201, aqiHigh: 300, concLow: 181, concHigh: 280 },
-      { aqiLow: 301, aqiHigh: 400, concLow: 281, concHigh: 400 },
-      { aqiLow: 401, aqiHigh: 500, concLow: 401, concHigh: 800 },
+      { aqiLow: 51, aqiHigh: 100, concLow: 40, concHigh: 80 },
+      { aqiLow: 101, aqiHigh: 200, concLow: 80, concHigh: 180 },
+      { aqiLow: 201, aqiHigh: 300, concLow: 180, concHigh: 280 },
+      { aqiLow: 301, aqiHigh: 400, concLow: 280, concHigh: 400 },
+      { aqiLow: 401, aqiHigh: 500, concLow: 400, concHigh: 800 },
     ],
   },
   {
@@ -178,14 +196,16 @@ export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
     name: { en: 'SO₂', hi: 'सल्फर डाइऑक्साइड' },
     unit: 'µg/m³',
     averagingPeriod: '24-hour',
+    requiredAveragingHours: 24,
+    minimumDataCompletenessHours: 16,
     isPM: false,
     breakpoints: [
       { aqiLow: 0, aqiHigh: 50, concLow: 0, concHigh: 40 },
-      { aqiLow: 51, aqiHigh: 100, concLow: 41, concHigh: 80 },
-      { aqiLow: 101, aqiHigh: 200, concLow: 81, concHigh: 380 },
-      { aqiLow: 201, aqiHigh: 300, concLow: 381, concHigh: 800 },
-      { aqiLow: 301, aqiHigh: 400, concLow: 801, concHigh: 1600 },
-      { aqiLow: 401, aqiHigh: 500, concLow: 1601, concHigh: 2400 },
+      { aqiLow: 51, aqiHigh: 100, concLow: 40, concHigh: 80 },
+      { aqiLow: 101, aqiHigh: 200, concLow: 80, concHigh: 380 },
+      { aqiLow: 201, aqiHigh: 300, concLow: 380, concHigh: 800 },
+      { aqiLow: 301, aqiHigh: 400, concLow: 800, concHigh: 1600 },
+      { aqiLow: 401, aqiHigh: 500, concLow: 1600, concHigh: 2400 },
     ],
   },
   {
@@ -193,14 +213,16 @@ export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
     name: { en: 'CO', hi: 'कार्बन मोनोऑक्साइड' },
     unit: 'mg/m³',
     averagingPeriod: '8-hour',
+    requiredAveragingHours: 8,
+    minimumDataCompletenessHours: 6,
     isPM: false,
     breakpoints: [
       { aqiLow: 0, aqiHigh: 50, concLow: 0, concHigh: 1.0 },
-      { aqiLow: 51, aqiHigh: 100, concLow: 1.1, concHigh: 2.0 },
-      { aqiLow: 101, aqiHigh: 200, concLow: 2.1, concHigh: 10 },
-      { aqiLow: 201, aqiHigh: 300, concLow: 10.1, concHigh: 17 },
-      { aqiLow: 301, aqiHigh: 400, concLow: 17.1, concHigh: 34 },
-      { aqiLow: 401, aqiHigh: 500, concLow: 34.1, concHigh: 68 },
+      { aqiLow: 51, aqiHigh: 100, concLow: 1.0, concHigh: 2.0 },
+      { aqiLow: 101, aqiHigh: 200, concLow: 2.0, concHigh: 10.0 },
+      { aqiLow: 201, aqiHigh: 300, concLow: 10.0, concHigh: 17.0 },
+      { aqiLow: 301, aqiHigh: 400, concLow: 17.0, concHigh: 34.0 },
+      { aqiLow: 401, aqiHigh: 500, concLow: 34.0, concHigh: 68.0 },
     ],
   },
   {
@@ -208,14 +230,16 @@ export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
     name: { en: 'O₃ (Ozone)', hi: 'ओज़ोन' },
     unit: 'µg/m³',
     averagingPeriod: '8-hour',
+    requiredAveragingHours: 8,
+    minimumDataCompletenessHours: 6,
     isPM: false,
     breakpoints: [
       { aqiLow: 0, aqiHigh: 50, concLow: 0, concHigh: 50 },
-      { aqiLow: 51, aqiHigh: 100, concLow: 51, concHigh: 100 },
-      { aqiLow: 101, aqiHigh: 200, concLow: 101, concHigh: 168 },
-      { aqiLow: 201, aqiHigh: 300, concLow: 169, concHigh: 208 },
-      { aqiLow: 301, aqiHigh: 400, concLow: 209, concHigh: 748 },
-      { aqiLow: 401, aqiHigh: 500, concLow: 749, concHigh: 1500 },
+      { aqiLow: 51, aqiHigh: 100, concLow: 50, concHigh: 100 },
+      { aqiLow: 101, aqiHigh: 200, concLow: 100, concHigh: 168 },
+      { aqiLow: 201, aqiHigh: 300, concLow: 168, concHigh: 208 },
+      { aqiLow: 301, aqiHigh: 400, concLow: 208, concHigh: 748 },
+      { aqiLow: 401, aqiHigh: 500, concLow: 748, concHigh: 1500 },
     ],
   },
   {
@@ -223,14 +247,16 @@ export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
     name: { en: 'NH₃ (Ammonia)', hi: 'अमोनिया' },
     unit: 'µg/m³',
     averagingPeriod: '24-hour',
+    requiredAveragingHours: 24,
+    minimumDataCompletenessHours: 16,
     isPM: false,
     breakpoints: [
       { aqiLow: 0, aqiHigh: 50, concLow: 0, concHigh: 200 },
-      { aqiLow: 51, aqiHigh: 100, concLow: 201, concHigh: 400 },
-      { aqiLow: 101, aqiHigh: 200, concLow: 401, concHigh: 800 },
-      { aqiLow: 201, aqiHigh: 300, concLow: 801, concHigh: 1200 },
-      { aqiLow: 301, aqiHigh: 400, concLow: 1201, concHigh: 1800 },
-      { aqiLow: 401, aqiHigh: 500, concLow: 1801, concHigh: 2700 },
+      { aqiLow: 51, aqiHigh: 100, concLow: 200, concHigh: 400 },
+      { aqiLow: 101, aqiHigh: 200, concLow: 400, concHigh: 800 },
+      { aqiLow: 201, aqiHigh: 300, concLow: 800, concHigh: 1200 },
+      { aqiLow: 301, aqiHigh: 400, concLow: 1200, concHigh: 1800 },
+      { aqiLow: 401, aqiHigh: 500, concLow: 1800, concHigh: 2700 },
     ],
   },
   {
@@ -238,14 +264,16 @@ export const POLLUTANT_BREAKPOINTS: PollutantMeta[] = [
     name: { en: 'Pb (Lead)', hi: 'सीसा' },
     unit: 'µg/m³',
     averagingPeriod: '24-hour',
+    requiredAveragingHours: 24,
+    minimumDataCompletenessHours: 16,
     isPM: false,
     breakpoints: [
       { aqiLow: 0, aqiHigh: 50, concLow: 0, concHigh: 0.5 },
-      { aqiLow: 51, aqiHigh: 100, concLow: 0.6, concHigh: 1.0 },
-      { aqiLow: 101, aqiHigh: 200, concLow: 1.1, concHigh: 2.0 },
-      { aqiLow: 201, aqiHigh: 300, concLow: 2.1, concHigh: 3.0 },
-      { aqiLow: 301, aqiHigh: 400, concLow: 3.1, concHigh: 3.5 },
-      { aqiLow: 401, aqiHigh: 500, concLow: 3.6, concHigh: 7.0 },
+      { aqiLow: 51, aqiHigh: 100, concLow: 0.5, concHigh: 1.0 },
+      { aqiLow: 101, aqiHigh: 200, concLow: 1.0, concHigh: 2.0 },
+      { aqiLow: 201, aqiHigh: 300, concLow: 2.0, concHigh: 3.0 },
+      { aqiLow: 301, aqiHigh: 400, concLow: 3.0, concHigh: 3.5 },
+      { aqiLow: 401, aqiHigh: 500, concLow: 3.5, concHigh: 7.0 },
     ],
   },
 ];
@@ -268,7 +296,6 @@ export function getAqiCategory(aqi: number): AqiCategoryInfo | null {
  */
 export function getPollutantMeta(id: string): PollutantMeta | undefined {
   const normalized = id.toUpperCase().replace(/\s+/g, '');
-  // Handle common variants from CPCB data
   const aliasMap: Record<string, PollutantId> = {
     'PM2.5': 'PM2.5',
     PM25: 'PM2.5',

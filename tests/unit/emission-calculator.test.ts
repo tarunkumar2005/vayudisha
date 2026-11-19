@@ -55,10 +55,31 @@ describe('Transport Emission Calculator & Impact Rules', () => {
     expect(res.disclaimer.hi).toContain('शहर के AQI को नहीं');
   });
 
-  it('provides thermal inversion timing guidance with physics-based dispersion rationale', () => {
-    const inversion = getThermalInversionGuidance();
+  it('provides thermal inversion timing guidance conditioned on actual AQI and MoHFW/NCDC advisory (Item 6)', () => {
+    // Normal / moderate AQI: afternoon dispersion offers relative window
+    const inversion = getThermalInversionGuidance(150);
     expect(inversion.worstHours.timeRange).toContain('6:00 AM');
     expect(inversion.preferredHours.timeRange).toContain('1:00 PM');
-    expect(inversion.disclaimer.en).toContain('does not claim medical dose elimination');
+    expect(inversion.disclaimer.en).toContain('October 2025 MoHFW/NCDC advisory');
+
+    // Severe smog (AQI > 400): afternoon air is NOT clean; MoHFW/NCDC urges staying indoors
+    const severeInversion = getThermalInversionGuidance(430);
+    expect(severeInversion.preferredHours.timeRange).toContain('Avoid outdoor exposure all day');
+    expect(severeInversion.preferredHours.reason.en).toContain('CRITICAL ADVISORY');
+    expect(severeInversion.preferredHours.reason.en).toContain('MoHFW/NCDC');
+  });
+
+  it('audits Indian transport emission factors, CEA grid mix, and citations (Item 8)', () => {
+    // Metro Rail incorporates CEA grid emission factor
+    const metro = INDIAN_TRANSPORT_EMISSION_FACTORS.metro_rail;
+    expect(metro.gCo2ePerPassengerKm).toBe(28);
+    expect(metro.source).toContain('DMRC');
+    expect(metro.assumptions.en).toContain('Central Electricity Authority (CEA)');
+    expect(metro.assumptions.en).toContain('716 g CO2/kWh');
+
+    // E-Rickshaw incorporates CEA grid emission factor
+    const erickshaw = INDIAN_TRANSPORT_EMISSION_FACTORS.e_rickshaw;
+    expect(erickshaw.gCo2ePerPassengerKm).toBe(16);
+    expect(erickshaw.assumptions.en).toContain('716 g CO2/kWh');
   });
 });

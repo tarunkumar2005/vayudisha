@@ -10,10 +10,19 @@
 * **Nature of Data**: Official observed ground station readings across India (Continuous Ambient Air Quality Monitoring Stations - CAAQMS).
 * **Update Frequency**: Approximately hourly.
 * **Freshness Threshold**: Telemetry older than 6 hours is explicitly marked as "Delayed / Stale".
-* **Validation**:
-  * Records validated via strict Zod schemas.
+* **Validation & Error Handling**:
+  * Records validated via strict Zod schemas (`CpcbApiResponseSchema`, `CpcbRecordSchema`).
   * Corrupted negative values (`pollutant_avg < 0`) and unphysical sensor spikes (`> 999 µg/m³` for particulates) are automatically discarded.
   * Timestamps parsed from Indian Standard Time (IST) format `DD-MM-YYYY HH:MM:SS`.
+  * **HTTP 403 Authorization Inconclusive Rule**: An unauthenticated HTTP 403 confirms access control, but is treated as an inconclusive authorization result rather than proof of a working authenticated API. The client classifies this under `apiStatus: 'unauthorized_or_invalid_key'` and requires a verified HTTP 200 response with validated schema before marking telemetry available.
+  * **Diagnostic API States**:
+    * `authenticated_success`: Valid 200 response with validated station schema.
+    * `unauthorized_or_invalid_key`: HTTP 403 returned from data.gov.in.
+    * `rate_limited`: HTTP 429 returned from data.gov.in.
+    * `upstream_server_error`: HTTP 5xx or unhandled status codes.
+    * `schema_validation_failed`: 200 OK returned but body schema diverged from CPCB specification.
+    * `timeout`: Request exceeded 15,000 ms threshold.
+    * `network_error`: Network connection dropped or unreachable.
 
 ---
 

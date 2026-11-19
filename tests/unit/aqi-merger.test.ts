@@ -32,6 +32,8 @@ describe('Unified AQI Merger & Critical Rules Compliance', () => {
       totalRecords: 5,
       invalidRecords: 0,
       apiAvailable: true,
+      apiStatus: 'authenticated_success',
+      statusDetails: 'Successfully authenticated and fetched valid records from data.gov.in',
     });
 
     vi.spyOn(CamsClient, 'fetchCamsForecast').mockResolvedValueOnce({
@@ -67,6 +69,8 @@ describe('Unified AQI Merger & Critical Rules Compliance', () => {
       totalRecords: 0,
       invalidRecords: 0,
       apiAvailable: false,
+      apiStatus: 'upstream_server_error',
+      statusDetails: 'CPCB downtime error',
       error: 'CPCB downtime error',
     });
 

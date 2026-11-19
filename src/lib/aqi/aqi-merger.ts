@@ -29,7 +29,7 @@ export interface UnifiedAqiPayload {
   };
   /** Primary current reading */
   current: {
-    aqi: number | null; // CPCB AQI if available, or null if only model forecast
+    aqi: number | null; // CPCB AQI if available, or null if only model forecast or insufficient data
     category: string;
     categoryHindi: string;
     color: string;
@@ -42,17 +42,21 @@ export interface UnifiedAqiPayload {
     dataSource: DataSourceType;
     dataSourceLabel: string;
     isModelForecast: boolean;
+    isOfficialSuppliedAqi: boolean;
+    isDerivedEstimate: boolean;
+    methodologyNote: string;
     subIndices?: AqiResult['subIndices'];
     rawPollutants?: Record<string, number>;
   };
   /** Multi-station readings in the city if available */
   stations: {
     station: string;
-    aqi: number;
+    aqi: number | null;
     category: string;
-    prominentPollutant: string;
+    prominentPollutant: string | null;
     isFresh: boolean;
     ageMinutes: number;
+    meetsMinimumData?: boolean;
   }[];
   /** Multi-day model forecast from CAMS */
   forecast: {
@@ -73,6 +77,8 @@ export interface UnifiedAqiPayload {
     officialCpcbAvailable: boolean;
     camsForecastAvailable: boolean;
     isFallback: boolean;
+    cpcbApiStatus?: string;
+    cpcbStatusDetails?: string;
     notice?: {
       en: string;
       hi: string;
@@ -163,28 +169,35 @@ export async function getUnifiedAqi(
         computedStations.push({
           station: st.station,
           aqi: aqiRes.aqi,
-          category: aqiRes.category.category,
+          category: aqiRes.category?.category ?? 'Data Insufficient',
           prominentPollutant: aqiRes.prominentPollutant,
           isFresh: st.isFresh,
           ageMinutes: st.ageMinutes,
+          meetsMinimumData: aqiRes.meetsMinimumData,
         });
 
-        // Prefer fresh stations, or stations with higher pollutant coverage
-        if (
-          !bestStationReading ||
-          (!bestStationReading.isFresh && st.isFresh) ||
-          (st.isFresh && aqiRes.subIndices.length > (bestAqiResult?.subIndices.length ?? 0))
-        ) {
-          bestStationReading = st;
-          bestAqiResult = aqiRes;
+        // Only select as primary best station if it has a valid AQI and meets minimum data
+        if (aqiRes.aqi !== null && aqiRes.category !== null) {
+          if (
+            !bestStationReading ||
+            (!bestStationReading.isFresh && st.isFresh) ||
+            (st.isFresh && aqiRes.subIndices.length > (bestAqiResult?.subIndices.length ?? 0))
+          ) {
+            bestStationReading = st;
+            bestAqiResult = aqiRes;
+          }
         }
       }
     }
   }
 
-  const hasOfficialData = bestStationReading !== null && bestAqiResult !== null;
+  const hasOfficialData =
+    bestStationReading !== null &&
+    bestAqiResult !== null &&
+    bestAqiResult.aqi !== null &&
+    bestAqiResult.category !== null;
 
-  if (hasOfficialData && bestStationReading && bestAqiResult) {
+  if (hasOfficialData && bestStationReading && bestAqiResult && bestAqiResult.category) {
     // 1. OFFICIAL CPCB DATA AVAILABLE
     return {
       city: {
@@ -210,15 +223,20 @@ export async function getUnifiedAqi(
           ? 'CPCB via data.gov.in (Simulated Demo)'
           : 'CPCB Official Ground Station (data.gov.in)',
         isModelForecast: false,
+        isOfficialSuppliedAqi: bestAqiResult.isOfficialSuppliedAqi,
+        isDerivedEstimate: bestAqiResult.isDerivedEstimate,
+        methodologyNote: bestAqiResult.methodologyNote,
         subIndices: bestAqiResult.subIndices,
         rawPollutants: bestStationReading.pollutants,
       },
       stations: computedStations,
       forecast: camsResult ? formatForecastSection(camsResult) : null,
       status: {
-        officialCpcbAvailable: !forceMock,
+        officialCpcbAvailable: !forceMock && (cpcbResult?.apiAvailable ?? false),
         camsForecastAvailable: camsResult?.apiAvailable ?? false,
         isFallback: forceMock,
+        cpcbApiStatus: cpcbResult?.apiStatus,
+        cpcbStatusDetails: cpcbResult?.statusDetails,
         notice: forceMock
           ? {
               en: 'Demonstration mode: displaying verified realistic CPCB station telemetry.',
@@ -280,6 +298,10 @@ export async function getUnifiedAqi(
       dataSource: 'cams_model_forecast',
       dataSourceLabel: 'Copernicus (CAMS) Model Forecast (Global 45km Grid)',
       isModelForecast: true,
+      isOfficialSuppliedAqi: false,
+      isDerivedEstimate: true,
+      methodologyNote:
+        'Copernicus Atmospheric Monitoring Service (CAMS) model forecast. Not an official CPCB station reading; official Indian AQI cannot be derived from single-point model data.',
       rawPollutants: {
         'PM2.5': pm25,
         PM10: pm10,
@@ -287,12 +309,14 @@ export async function getUnifiedAqi(
         CO: currentCamsHour?.co_mg_m3 ?? 1.2,
       },
     },
-    stations: [],
+    stations: computedStations,
     forecast: camsResult ? formatForecastSection(camsResult) : null,
     status: {
       officialCpcbAvailable: false,
       camsForecastAvailable: camsResult?.apiAvailable ?? false,
       isFallback: true,
+      cpcbApiStatus: cpcbResult?.apiStatus,
+      cpcbStatusDetails: cpcbResult?.statusDetails,
       notice: {
         en: 'Official CPCB ground station data is currently unavailable for this location. Showing atmospheric model forecast from Copernicus (CAMS).',
         hi: 'इस स्थान के लिए आधिकारिक सीपीसीबी स्टेशन डेटा उपलब्ध नहीं है। कॉपरनिकस (सीएएमएस) वायुमंडलीय मॉडल पूर्वानुमान दिखाया जा रहा है।',

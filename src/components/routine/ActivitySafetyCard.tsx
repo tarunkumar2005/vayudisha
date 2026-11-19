@@ -4,7 +4,7 @@ import React from 'react';
 import { useApp } from '@/context/AppContext';
 import { UI_STRINGS } from '@/lib/i18n/translations';
 import { type ActivityGuidance } from '@/lib/rules/safety-rules';
-import { Dumbbell, Baby, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Dumbbell, Baby, ShieldCheck, AlertCircle, Info } from 'lucide-react';
 
 interface ActivitySafetyCardProps {
   guidance: ActivityGuidance | null;
@@ -25,6 +25,8 @@ export function ActivitySafetyCard({ guidance }: ActivitySafetyCardProps) {
     bannerBg = 'bg-amber-900 text-amber-50 border-amber-700';
   }
 
+  const isMaskRecommended = guidance.maskGuidance?.recommended ?? guidance.maskRequired;
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
       {/* Top Alert Banner */}
@@ -35,7 +37,7 @@ export function ActivitySafetyCard({ guidance }: ActivitySafetyCardProps) {
             <h3 className="font-bold text-sm sm:text-base leading-snug">
               {isHindi ? guidance.headline.hi : guidance.headline.en}
             </h3>
-            <p className="text-xs sm:text-sm text-slate-200 mt-1">
+            <p className="text-xs sm:text-sm text-slate-200 mt-1 leading-relaxed">
               {isHindi ? guidance.details.hi : guidance.details.en}
             </p>
           </div>
@@ -90,7 +92,7 @@ export function ActivitySafetyCard({ guidance }: ActivitySafetyCardProps) {
           </div>
         </div>
 
-        {/* 3. Mask Requirement */}
+        {/* 3. Conditional Respirator Guidance (MoHFW Oct 2025 Advisory) */}
         <div className="py-2 sm:py-0 sm:px-3 flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
             <ShieldCheck className="w-5 h-5 text-slate-700" />
@@ -101,18 +103,38 @@ export function ActivitySafetyCard({ guidance }: ActivitySafetyCardProps) {
             </span>
             <span
               className={`text-xs font-bold px-2 py-0.5 rounded inline-block mt-0.5 ${
-                guidance.maskRequired
-                  ? 'bg-red-100 text-red-800'
+                isMaskRecommended
+                  ? 'bg-amber-100 text-amber-900'
                   : 'bg-slate-100 text-slate-700'
               }`}
             >
-              {guidance.maskRequired
+              {isMaskRecommended
                 ? UI_STRINGS.safety.required[language]
                 : UI_STRINGS.safety.notNeeded[language]}
             </span>
           </div>
         </div>
       </div>
+
+      {/* Conditional Respirator Fit & Medical Advisory Footer */}
+      {isMaskRecommended && guidance.maskGuidance && (
+        <div className="bg-amber-50/70 border-t border-amber-100 p-3.5 sm:px-5 text-xs text-amber-900 space-y-1">
+          <div className="flex items-start space-x-1.5">
+            <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold block">
+                {isHindi ? guidance.maskGuidance.condition.hi : guidance.maskGuidance.condition.en}
+              </span>
+              <p className="text-[11px] text-amber-800 mt-0.5">
+                • {isHindi ? guidance.maskGuidance.properFitNotice.hi : guidance.maskGuidance.properFitNotice.en}
+              </p>
+              <p className="text-[11px] text-amber-800">
+                • {isHindi ? guidance.maskGuidance.medicalCaution.hi : guidance.maskGuidance.medicalCaution.en}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

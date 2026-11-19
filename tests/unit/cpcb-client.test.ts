@@ -106,7 +106,7 @@ describe('CPCB Response Schema & Processing', () => {
     }
   });
 
-  it('handles API errors (403 invalid key) with structured error reporting', async () => {
+  it('treats HTTP 403 as an inconclusive authorization result and records diagnostic apiStatus', async () => {
     const mockFetcher = async () =>
       new Response(JSON.stringify({ error: 'Key not authorised' }), {
         status: 403,
@@ -119,6 +119,8 @@ describe('CPCB Response Schema & Processing', () => {
     try {
       const result = await fetchCpcbData('Delhi', { apiKey: 'bad-key' });
       expect(result.apiAvailable).toBe(false);
+      expect(result.apiStatus).toBe('unauthorized_or_invalid_key');
+      expect(result.statusDetails).toContain('Inconclusive authorization result (HTTP 403)');
       expect(result.error).toContain('Key not authorised');
       expect(result.stations).toHaveLength(0);
     } finally {

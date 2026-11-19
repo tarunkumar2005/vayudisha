@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 
 export default function ImpactPage() {
-  const { language } = useApp();
+  const { language, aqiData } = useApp();
   const isHindi = language === 'hi';
 
   const [currentMode, setCurrentMode] = useState<string>('car_petrol');
@@ -48,8 +48,8 @@ export default function ImpactPage() {
       tripsPerWeek,
     });
     setCalcResult(res);
-    setInversionGuidance(getThermalInversionGuidance());
-  }, [currentMode, altMode, distanceKm, tripsPerWeek]);
+    setInversionGuidance(getThermalInversionGuidance(aqiData?.current?.aqi));
+  }, [currentMode, altMode, distanceKm, tripsPerWeek, aqiData?.current?.aqi]);
 
   const chartData = calcResult
     ? [

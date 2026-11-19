@@ -15,14 +15,20 @@ const defaultProfile: DemographicProfile = {
 };
 
 describe('Deterministic Safety Rule Engine', () => {
-  it('mandates N95 mask and indoor shelter during Severe AQI regardless of health status', () => {
+  it('provides conditional N95 respirator guidance and prioritizes exposure reduction during Severe AQI as per MoHFW/NCDC', () => {
     const guidance = evaluateActivitySafety('Severe', defaultProfile);
     expect(guidance.level).toBe('HAZARDOUS_SEAL_INDOORS');
     expect(guidance.canExerciseOutdoors).toBe(false);
     expect(guidance.maskRequired).toBe(true);
     expect(guidance.maskType).toBe('N95');
-    expect(guidance.headline.en).toContain('Emergency Smog');
-    expect(guidance.headline.hi).toContain('आपातकालीन धुंध');
+    expect(guidance.headline.en).toContain('Severe Smog Emergency');
+    expect(guidance.headline.hi).toContain('गंभीर धुंध आपातकाल');
+
+    // MoHFW/NCDC (Oct 2025) conditional respirator safety checks
+    expect(guidance.maskGuidance.recommended).toBe(true);
+    expect(guidance.maskGuidance.condition.en).toContain('unavoidable');
+    expect(guidance.maskGuidance.properFitNotice.en).toContain('leaks');
+    expect(guidance.maskGuidance.medicalCaution.en).toContain('doctor');
   });
 
   it('permits all activities without masks during Good AQI', () => {
@@ -31,6 +37,7 @@ describe('Deterministic Safety Rule Engine', () => {
     expect(guidance.canExerciseOutdoors).toBe(true);
     expect(guidance.schoolPlaySafe).toBe(true);
     expect(guidance.maskRequired).toBe(false);
+    expect(guidance.maskGuidance.recommended).toBe(false);
   });
 
   it('restricts outdoor activities for households with sensitive/elderly members during Moderate AQI', () => {
@@ -44,6 +51,7 @@ describe('Deterministic Safety Rule Engine', () => {
     expect(guidance.level).toBe('SENSITIVE_GROUPS_STAY_INDOORS');
     expect(guidance.canExerciseOutdoors).toBe(false);
     expect(guidance.maskRequired).toBe(true);
+    expect(guidance.maskGuidance.recommended).toBe(true);
   });
 
   it('strictly filters recommendations by user budget tier', () => {
@@ -62,6 +70,52 @@ describe('Deterministic Safety Rule Engine', () => {
     const recsHigh = getEligibleRecommendations('Very Poor', highBudgetProfile);
     expect(recsHigh.some((r) => r.budgetTier === 'high')).toBe(true);
     expect(recsHigh.some((r) => r.budgetTier === 'low')).toBe(true);
+  });
+
+  it('reframes indoor plants as biophilic/wellness without false PM2.5 purification claims (Item 1)', () => {
+    const recs = getEligibleRecommendations('Moderate', {
+      ...defaultProfile,
+      budgetTier: 'low',
+    });
+    const plantRec = recs.find((r) => r.id === 'air_purifying_indoor_plants');
+    expect(plantRec).toBeDefined();
+    expect(plantRec?.category).toBe('lifestyle');
+    // Must NOT claim that plants purify smog or filter PM2.5 in homes
+    expect(plantRec?.summary.en).not.toContain('purify smog');
+    expect(plantRec?.summary.en.toLowerCase()).toContain('biophilic');
+    expect(plantRec?.evidence.source).toContain('Cummings & Waring');
+    expect(plantRec?.evidence.fact.en).toContain('negligible impact on air quality');
+  });
+
+  it('enforces complete Corsi-Rosenthal DIY box fan safety guidance (Item 3)', () => {
+    const recs = getEligibleRecommendations('Severe', {
+      ...defaultProfile,
+      budgetTier: 'medium',
+    });
+    const diyRec = recs.find((r) => r.id === 'diy_box_fan_air_cleaner');
+    expect(diyRec).toBeDefined();
+    expect(diyRec?.summary.en).toContain('alternative');
+    // Must contain 2012+ UL/ETL and thermal fuse safety
+    const actionText = diyRec?.actionSteps.en.join(' ');
+    expect(actionText).toContain('2012 or later');
+    expect(actionText).toContain('UL');
+    expect(actionText).toContain('MERV-13');
+    expect(actionText).toContain('fuse');
+    expect(actionText).toContain('unsupervised');
+  });
+
+  it('enforces true HEPA CADR sizing and strictly prohibits ozone generators (Item 7)', () => {
+    const recs = getEligibleRecommendations('Severe', {
+      ...defaultProfile,
+      budgetTier: 'high',
+    });
+    const hepaRec = recs.find((r) => r.id === 'true_hepa_purifier_h13');
+    expect(hepaRec).toBeDefined();
+    const actionText = hepaRec?.actionSteps.en.join(' ');
+    expect(actionText).toContain('CADR');
+    expect(actionText).toContain('Never purchase ozone-generating');
+    expect(hepaRec?.summary.en).toContain('HEPA does NOT remove hazardous gases');
+    expect(hepaRec?.evidence.fact.en).toContain('Ozone-generating devices are explicitly warned against');
   });
 
   it('ensures all recommendations have valid evidence citations and bilingual texts', () => {

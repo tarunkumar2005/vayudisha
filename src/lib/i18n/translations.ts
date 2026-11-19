@@ -33,13 +33,17 @@ export const UI_STRINGS = {
   safety: {
     outdoorActivity: { en: 'Outdoor Workouts', hi: 'बाहरी कसरत' },
     schoolPlay: { en: 'Children Outdoor Play', hi: 'बच्चों का बाहर खेलना' },
-    maskRequirement: { en: 'N95 Respirator', hi: 'N95 मास्क' },
+    maskRequirement: { en: 'N95/N99 Respirator (Outdoor)', hi: 'N95/N99 मास्क (बाहर जाने पर)' },
     safe: { en: 'Safe', hi: 'सुरक्षित' },
     caution: { en: 'Moderate Caution', hi: 'सावधानी बरतें' },
     avoid: { en: 'Avoid / Shift Indoors', hi: 'घर के अंदर रहें' },
-    required: { en: 'Strictly Required', hi: 'अनिवार्य है' },
-    recommended: { en: 'Recommended', hi: 'अनुशंसित' },
+    required: { en: 'Conditionally Recommended (Proper Fit)', hi: 'सशर्त अनुशंसित (सही फिटिंग)' },
+    recommended: { en: 'Conditionally Recommended', hi: 'सशर्त अनुशंसित' },
     notNeeded: { en: 'Not Needed', hi: 'आवश्यक नहीं' },
+    exposureReductionPrimary: {
+      en: 'Exposure Reduction is Primary Defense (MoHFW Advisory)',
+      hi: 'घर के अंदर रहना प्राथमिक बचाव है (स्वास्थ्य मंत्रालय परामर्श)',
+    },
   },
   buttons: {
     switchLanguage: { en: 'हिंदी', hi: 'English' },

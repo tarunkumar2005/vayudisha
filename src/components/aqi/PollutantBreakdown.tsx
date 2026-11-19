@@ -82,6 +82,11 @@ export function PollutantBreakdown({ subIndices, rawPollutants }: PollutantBreak
                   </span>
                 </span>
                 <span className="font-semibold text-slate-700">
+                  {item.isSufficientHours === false ? (
+                    <span className="text-amber-600 font-normal mr-1 text-[11px]">
+                      ({item.hoursMonitored}h &lt; {item.averagingPeriod === '24-hour' ? '16h' : '6h'}: Incomplete)
+                    </span>
+                  ) : null}
                   Sub-Index: <strong className="text-slate-900">{item.subIndex}</strong> ({item.category})
                 </span>
               </div>

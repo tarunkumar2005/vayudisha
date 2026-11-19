@@ -75,6 +75,15 @@ export const CpcbErrorResponseSchema = z.object({
 
 // --- Processed types ---
 
+export type CpcbApiStatus =
+  | 'authenticated_success'
+  | 'unauthorized_or_invalid_key'
+  | 'rate_limited'
+  | 'upstream_server_error'
+  | 'schema_validation_failed'
+  | 'timeout'
+  | 'network_error';
+
 export interface StationReading {
   station: string;
   city: string;
@@ -100,8 +109,12 @@ export interface CpcbDataResult {
   totalRecords: number;
   /** Number of records that failed validation */
   invalidRecords: number;
-  /** Whether the API responded successfully */
+  /** Whether the API responded successfully with valid records */
   apiAvailable: boolean;
+  /** Diagnostic API status */
+  apiStatus: CpcbApiStatus;
+  /** Diagnostic status message */
+  statusDetails: string;
   /** Error message if API failed */
   error?: string;
 }
@@ -167,7 +180,27 @@ export async function fetchCpcbData(
         // Keep generic error message
       }
 
-      return makeErrorResult(errorMsg);
+      if (response.status === 403) {
+        return makeErrorResult(
+          errorMsg,
+          'unauthorized_or_invalid_key',
+          'Inconclusive authorization result (HTTP 403): The data.gov.in API rejected authorization. An unauthenticated 403 confirms access control, but does not prove authenticated query success or valid resource schema.'
+        );
+      }
+
+      if (response.status === 429) {
+        return makeErrorResult(
+          errorMsg,
+          'rate_limited',
+          'Rate limit exceeded on data.gov.in endpoint (HTTP 429).'
+        );
+      }
+
+      return makeErrorResult(
+        errorMsg,
+        'upstream_server_error',
+        `data.gov.in upstream server error (HTTP ${response.status}).`
+      );
     }
 
     const json = await response.json();
@@ -176,7 +209,9 @@ export async function fetchCpcbData(
     const parseResult = CpcbApiResponseSchema.safeParse(json);
     if (!parseResult.success) {
       return makeErrorResult(
-        `CPCB API response schema mismatch: ${parseResult.error.issues.map((i) => i.message).join(', ')}`
+        `CPCB API response schema mismatch: ${parseResult.error.issues.map((i) => i.message).join(', ')}`,
+        'schema_validation_failed',
+        'Response structure from data.gov.in did not match expected CPCB schema.'
       );
     }
 
@@ -186,10 +221,16 @@ export async function fetchCpcbData(
     return processRecords(apiData);
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      return makeErrorResult(`CPCB API request timed out after ${timeout}ms`);
+      return makeErrorResult(
+        `CPCB API request timed out after ${timeout}ms`,
+        'timeout',
+        'Network timeout contacting data.gov.in'
+      );
     }
     return makeErrorResult(
-      `CPCB API request failed: ${err instanceof Error ? err.message : String(err)}`
+      `CPCB API request failed: ${err instanceof Error ? err.message : String(err)}`,
+      'network_error',
+      'Network connectivity failure reaching data.gov.in'
     );
   }
 }
@@ -261,12 +302,18 @@ function processRecords(apiData: CpcbApiResponse): CpcbDataResult {
     totalRecords: apiData.records.length,
     invalidRecords,
     apiAvailable: true,
+    apiStatus: 'authenticated_success',
+    statusDetails: 'Successfully authenticated and fetched valid records from data.gov.in',
   };
 }
 
 // --- Helpers ---
 
-function makeErrorResult(error: string): CpcbDataResult {
+function makeErrorResult(
+  error: string,
+  apiStatus: CpcbApiStatus = 'upstream_server_error',
+  statusDetails?: string
+): CpcbDataResult {
   return {
     source: 'cpcb',
     sourceLabel: 'CPCB via data.gov.in',
@@ -275,6 +322,8 @@ function makeErrorResult(error: string): CpcbDataResult {
     totalRecords: 0,
     invalidRecords: 0,
     apiAvailable: false,
+    apiStatus,
+    statusDetails: statusDetails ?? error,
     error,
   };
 }

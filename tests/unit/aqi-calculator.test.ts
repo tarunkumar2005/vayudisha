@@ -89,11 +89,12 @@ describe('calculateOverallAQI (CPCB Multi-Pollutant Aggregation)', () => {
     expect(result).not.toBeNull();
     expect(result?.meetsMinimumData).toBe(true);
     expect(result?.prominentPollutant).toBe('PM2.5');
-    expect(result?.category.category).toBe('Very Poor');
+    expect(result?.category?.category).toBe('Very Poor');
     expect(result?.aqi).toBeGreaterThanOrEqual(301);
+    expect(result?.isDerivedEstimate).toBe(true);
   });
 
-  it('enforces CPCB minimum data requirement: at least 3 pollutants, at least 1 PM', () => {
+  it('enforces CPCB minimum data requirement: at least 3 pollutants, at least 1 PM; returns null AQI if insufficient', () => {
     // Only 2 pollutants
     const twoPollutants = {
       'PM2.5': 80,
@@ -101,6 +102,8 @@ describe('calculateOverallAQI (CPCB Multi-Pollutant Aggregation)', () => {
     };
     const res2 = calculateOverallAQI(twoPollutants);
     expect(res2?.meetsMinimumData).toBe(false);
+    expect(res2?.aqi).toBeNull();
+    expect(res2?.category).toBeNull();
 
     // 3 pollutants but NO PM pollutant
     const noPm = {
@@ -110,6 +113,8 @@ describe('calculateOverallAQI (CPCB Multi-Pollutant Aggregation)', () => {
     };
     const resNoPm = calculateOverallAQI(noPm);
     expect(resNoPm?.meetsMinimumData).toBe(false);
+    expect(resNoPm?.aqi).toBeNull();
+    expect(resNoPm?.category).toBeNull();
 
     // 3 pollutants WITH PM
     const valid = {
@@ -119,6 +124,52 @@ describe('calculateOverallAQI (CPCB Multi-Pollutant Aggregation)', () => {
     };
     const resValid = calculateOverallAQI(valid);
     expect(resValid?.meetsMinimumData).toBe(true);
+    expect(resValid?.aqi).not.toBeNull();
+    expect(resValid?.category).not.toBeNull();
+  });
+
+  it('enforces 16-hour data completeness rule for 24h pollutants and 6h for 8h pollutants', () => {
+    // PM2.5 with only 12 hours monitored (< 16h) should be rejected
+    const pollutantInputs = [
+      { pollutantId: 'PM2.5', concentration: 150, hoursMonitored: 12 }, // Incomplete (< 16h)
+      { pollutantId: 'PM10', concentration: 180, hoursMonitored: 20 },  // Complete (>= 16h)
+      { pollutantId: 'NO2', concentration: 45, hoursMonitored: 18 },    // Complete (>= 16h)
+      { pollutantId: 'CO', concentration: 1.2, hoursMonitored: 4 },     // Incomplete (< 6h)
+      { pollutantId: 'SO2', concentration: 25, hoursMonitored: 19 },    // Complete (>= 16h)
+    ];
+
+    const result = calculateOverallAQI(pollutantInputs);
+    expect(result).not.toBeNull();
+    // PM2.5 (12h) and CO (4h) should be flagged in invalidPollutants as INSUFFICIENT_HOURS
+    expect(
+      result?.invalidPollutants.some(
+        (p) => p.pollutantId === 'PM2.5' && p.reason === 'INSUFFICIENT_HOURS'
+      )
+    ).toBe(true);
+    expect(
+      result?.invalidPollutants.some(
+        (p) => p.pollutantId === 'CO' && p.reason === 'INSUFFICIENT_HOURS'
+      )
+    ).toBe(true);
+
+    // Remaining valid: PM10, NO2, SO2 (3 pollutants with at least 1 PM -> meets minimum data)
+    expect(result?.meetsMinimumData).toBe(true);
+    expect(result?.prominentPollutant).toBe('PM10');
+  });
+
+  it('distinguishes official supplied AQI from derived estimate', () => {
+    const derived = calculateOverallAQI({ 'PM2.5': 120, PM10: 150, NO2: 40 });
+    expect(derived?.isOfficialSuppliedAqi).toBe(false);
+    expect(derived?.isDerivedEstimate).toBe(true);
+    expect(derived?.methodologyNote).toContain('Derived');
+
+    const official = calculateOverallAQI(
+      { 'PM2.5': 120, PM10: 150, NO2: 40 },
+      { isOfficialSuppliedAqi: true }
+    );
+    expect(official?.isOfficialSuppliedAqi).toBe(true);
+    expect(official?.isDerivedEstimate).toBe(false);
+    expect(official?.methodologyNote).toContain('Official');
   });
 
   it('discards unreasonable / sensor glitch readings', () => {

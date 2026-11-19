@@ -26,8 +26,9 @@ PRIMARY DIRECTIVES:
 1. You personalize and explain ONLY the pre-approved recommendations provided in the input prompt. Never invent new health interventions or unsupported statistics.
 2. NEVER give medical diagnoses, prescribe drugs or treatments, or tell users to ignore clinical advice.
 3. NEVER claim that an individual family's choices will reduce ambient outdoor city AQI. Individual choices reduce inhaled personal exposure and transport CO2e footprint, not citywide weather-inversion smog.
-4. When asked in Hindi ('hi'), write in natural, warm, respectful Devanagari Hindi (e.g. "आपके परिवार के लिए सुझाव").
-5. Output MUST be valid JSON adhering strictly to the requested schema.`;
+4. Align with Government of India October 2025 MoHFW/NCDC advisory: prioritize exposure reduction indoors; frame N95/N99 respirators as conditional for unavoidable outdoor exposure with airtight seal requirements; note that afternoon boundary layer dispersion provides only relative relief and that afternoon air is NOT clean during severe smog episodes; and never treat indoor plants as air filtration devices.
+5. When asked in Hindi ('hi'), write in natural, warm, respectful Devanagari Hindi (e.g. "आपके परिवार के लिए सुझाव").
+6. Output MUST be valid JSON adhering strictly to the requested schema.`;
 
 export interface PersonalizationResult {
   isAiGenerated: boolean;
@@ -137,6 +138,9 @@ export function createDeterministicFallback(
   context: AnonymizedAiPromptContext
 ): AiPersonalizedResponse {
   const isHindi = context.requestedLanguage === 'hi';
+  const isHighSmog =
+    context.aqiCategory.toLowerCase().includes('severe') ||
+    context.aqiCategory.toLowerCase().includes('very poor');
 
   const advice = context.approvedRecommendations.map((rec) => ({
     id: rec.id,
@@ -147,20 +151,22 @@ export function createDeterministicFallback(
 
   if (isHindi) {
     return {
-      openingEncouragement: `वायु गुणवत्ता (${context.aqiCategory}) को देखते हुए, आपके परिवार की सुरक्षा के लिए यहाँ प्रमाणित सुझाव दिए गए हैं।`,
+      openingEncouragement: `वायु गुणवत्ता (${context.aqiCategory}) को देखते हुए, आपके परिवार की सुरक्षा के लिए यहाँ MoHFW/NCDC मानकों के अनुरूप प्रमाणित सुझाव दिए गए हैं।`,
       personalizedAdvice: advice,
-      dailySmogWindowTip:
-        'सर्दियों में सुबह 6 से 9 बजे के बीच धुआं जमीन के सबसे पास रहता है। घर के काम और बाहर निकलना दोपहर 1 से 4 बजे के बीच रखें।',
+      dailySmogWindowTip: isHighSmog
+        ? 'गंभीर स्मॉग के दिनों में दोपहर का वायुमंडलीय फैलाव केवल तुलनात्मक राहत देता है; हवा तब भी खतरनाक रहती है। MoHFW/NCDC सलाह के अनुसार बाहर की शारीरिक गतिविधियों से पूरी तरह बचें।'
+        : 'सुबह और देर शाम इनवर्जन से धुआं जमीन के पास जमा रहता है। यदि बाहर जाना जरूरी हो, तो वास्तविक AQI जांचें और दोपहर (1-4 बजे) का समय चुनें।',
       safetyDisclaimer:
         'यह सामान्य वायु गुणवत्ता जागरूकता सुझाव हैं, चिकित्सकीय सलाह नहीं। सांस की समस्या होने पर डॉक्टर से परामर्श लें।',
     };
   }
 
   return {
-    openingEncouragement: `With current air quality at ${context.aqiCategory}, here are evidence-backed routines tailored to protect your household.`,
+    openingEncouragement: `With current air quality at ${context.aqiCategory}, here are evidence-backed routines tailored to protect your household in line with MoHFW/NCDC advisories.`,
     personalizedAdvice: advice,
-    dailySmogWindowTip:
-      'Thermal inversion traps ground smoke in the morning (6–9 AM). Prefer scheduling outdoor errands between 1 PM and 4 PM when sunlight disperses stagnant air.',
+    dailySmogWindowTip: isHighSmog
+      ? 'During severe smog episodes, afternoon dispersion is only relative; air remains hazardous. The MoHFW/NCDC advisory urges avoiding non-essential outdoor exposure entirely.'
+      : 'Thermal inversion traps ground smoke in early mornings and late evenings. If outdoor transit is necessary, check real-time AQI and prefer afternoon hours (1–4 PM) when atmospheric mixing is relatively better.',
     safetyDisclaimer:
       'General air quality guidance, not medical diagnosis or treatment. Consult a qualified healthcare professional for acute respiratory symptoms.',
   };
