@@ -29,9 +29,21 @@ export function AqiGauge({
 
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
+      {/* Screen-reader summary (gauge is decorative SVG) */}
+      <p className="sr-only">
+        {aqi !== null
+          ? `Air Quality Index: ${aqi} out of 500. Category: ${category}.`
+          : `Air Quality Index not available. Risk category: ${category}.`}
+        {prominentPollutant ? ` Prominent pollutant: ${prominentPollutant}.` : ''}
+        {isModelForecast ? ' This is a model estimate, not an official CPCB station reading.' : ''}
+      </p>
       {/* SVG Circular Meter */}
       <div className="relative w-48 h-48 flex items-center justify-center">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160" aria-hidden="true">
+        <svg
+          className="w-full h-full transform -rotate-90"
+          viewBox="0 0 160 160"
+          aria-hidden="true"
+        >
           {/* Background Track */}
           <circle
             cx="80"
@@ -52,19 +64,19 @@ export function AqiGauge({
             strokeDasharray={440}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
+            className="transition-all motion-reduce:transition-none duration-1000 ease-out"
           />
         </svg>
 
         {/* Inner Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+          <span className="text-xs font-semibold tracking-wider text-slate-600 uppercase">
             {isModelForecast ? 'Model Est.' : 'CPCB AQI'}
           </span>
           <span className="text-5xl font-black tracking-tight text-slate-900 my-0.5">
             {aqi !== null ? aqi : '--'}
           </span>
-          <span className="text-xs font-medium text-slate-500">
+          <span className="text-xs font-medium text-slate-600">
             {aqi !== null ? '/ 500' : 'µg/m³ Model'}
           </span>
         </div>
@@ -82,7 +94,7 @@ export function AqiGauge({
         {/* Prominent Pollutant */}
         {prominentPollutant && (
           <div className="mt-2 text-xs text-slate-600 flex items-center space-x-1">
-            <span className="text-slate-400">{UI_STRINGS.aqiLabels.prominentPollutant[language]}:</span>
+            <span className="text-slate-600 font-medium">{UI_STRINGS.aqiLabels.prominentPollutant[language]}:</span>
             <span className="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
               {prominentPollutant}
             </span>

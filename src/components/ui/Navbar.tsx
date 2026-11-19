@@ -41,7 +41,7 @@ export function Navbar() {
           </div>
 
           {/* Nav Links */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden md:flex items-center space-x-1" aria-label="Main navigation">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -82,9 +82,9 @@ export function Navbar() {
             <button
               onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
               className="flex items-center space-x-1 px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors"
-              title="Switch Language"
+              title={language === 'en' ? 'Switch to Hindi' : 'अंग्रेज़ी में बदलें'}
             >
-              <Globe className="w-3.5 h-3.5 text-slate-500" />
+              <Globe className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
               <span>{UI_STRINGS.buttons.switchLanguage[language]}</span>
             </button>
           </div>

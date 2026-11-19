@@ -162,7 +162,7 @@ export default function PlannerPage() {
                   : 'Asthma or respiratory sensitivity present'}
               </span>
             </label>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-600">
               {isHindi
                 ? 'निजी स्वास्थ्य जानकारी पूरी तरह सुरक्षित रखी जाती है।'
                 : 'Zero clinical details or medical records leave your device.'}
@@ -171,10 +171,12 @@ export default function PlannerPage() {
 
           {/* Commute Mode */}
           <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-600 block">
+            <label htmlFor="commute-mode-select" className="text-xs font-bold text-slate-600 block">
               {isHindi ? 'मुख्य आवागमन साधन' : 'Primary Commute Mode'}
-            </span>
+            </label>
             <select
+              id="commute-mode-select"
+              aria-label={isHindi ? 'मुख्य आवागमन साधन' : 'Primary Commute Mode'}
               value={profile.commuteMode}
               onChange={(e) =>
                 setProfile((prev) => ({
@@ -195,10 +197,12 @@ export default function PlannerPage() {
 
           {/* Budget Tier */}
           <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-600 block">
+            <label htmlFor="budget-tier-select" className="text-xs font-bold text-slate-600 block">
               {isHindi ? 'इनडोर सुधार बजट' : 'Indoor Air Budget'}
-            </span>
+            </label>
             <select
+              id="budget-tier-select"
+              aria-label={isHindi ? 'इनडोर सुधार बजट' : 'Indoor Air Budget'}
               value={profile.budgetTier}
               onChange={(e) =>
                 setProfile((prev) => ({
@@ -311,7 +315,7 @@ export default function PlannerPage() {
                           ? 'Medium Budget'
                           : 'High Budget'}
                     </span>
-                    <span className="text-xs text-slate-400 capitalize">{rec.category}</span>
+                    <span className="text-xs text-slate-600 capitalize font-medium">{rec.category}</span>
                   </div>
 
                   <h3 className="font-bold text-base text-slate-900 leading-snug">
@@ -347,7 +351,7 @@ export default function PlannerPage() {
                     href={rec.evidence.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1 text-emerald-600 hover:text-emerald-700 font-semibold"
+                    className="inline-flex items-center space-x-1 text-emerald-700 hover:text-emerald-800 font-semibold"
                   >
                     <span>{isHindi ? 'शोध देखें' : 'Evidence'}</span>
                     <ExternalLink className="w-3 h-3" />

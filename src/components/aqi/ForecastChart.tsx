@@ -146,7 +146,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
       )}
 
       {/* Mandatory Disclaimer */}
-      <p className="mt-3 text-[11px] text-slate-400">
+      <p className="mt-3 text-[11px] text-slate-600 font-medium">
         ℹ️ {forecast.disclaimer}
       </p>
     </div>

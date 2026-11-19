@@ -28,8 +28,18 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans antialiased">
         <AppProvider>
+          {/* Skip to main content — WCAG 2.4.1 (A) */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-emerald-700 focus:text-white focus:rounded-lg focus:font-semibold focus:text-sm focus:shadow-lg"
+          >
+            Skip to main content
+          </a>
           <Navbar />
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <main
+            id="main-content"
+            className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
+          >
             {children}
           </main>
           <footer className="bg-white border-t border-slate-200 mt-12 py-8 text-xs text-slate-500">
@@ -39,11 +49,11 @@ export default function RootLayout({
                   SaansSaathi (साँस साथी) — PromptWars Challenge 06
                 </span>
                 <span>
-                  Official CPCB Ground Station & Copernicus (CAMS) Model Data
+                  Official CPCB Ground Station &amp; Copernicus (CAMS) Model Data
                 </span>
               </div>
-              <p className="max-w-3xl leading-relaxed text-slate-400">
-                Public health & environmental guidance based on official Central Pollution Control Board (CPCB) benchmarks. Not a medical diagnostic device. Consult a physician for acute respiratory distress.
+              <p className="max-w-3xl leading-relaxed text-slate-600">
+                Public health &amp; environmental guidance based on official Central Pollution Control Board (CPCB) benchmarks. Not a medical diagnostic device. Consult a physician for acute respiratory distress.
               </p>
             </div>
           </footer>

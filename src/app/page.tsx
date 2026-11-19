@@ -24,8 +24,13 @@ export default function DashboardPage() {
 
   if (isLoadingAqi && !aqiData) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      <div
+        className="flex flex-col items-center justify-center min-h-[60vh] space-y-4"
+        role="status"
+        aria-live="polite"
+        aria-label={isHindi ? 'वायु गुणवत्ता डेटा लोड हो रहा है' : 'Loading air quality data'}
+      >
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
         <p className="text-sm font-medium text-slate-600">
           {isHindi ? 'वायु गुणवत्ता डेटा प्राप्त किया जा रहा है...' : 'Fetching verified air quality telemetry...'}
         </p>
@@ -42,7 +47,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             {isHindi ? aqiData?.city.name.hi : aqiData?.city.name.en}{' '}
-            <span className="text-slate-400 font-normal">
+            <span className="text-slate-600 font-normal">
               {isHindi ? 'वायु गुणवत्ता डैशबोर्ड' : 'Air Quality Overview'}
             </span>
           </h1>
@@ -122,7 +127,7 @@ export default function DashboardPage() {
                     : 'Personalized routines & indoor air improvements by budget.'}
                 </p>
               </div>
-              <span className="text-xs font-semibold text-emerald-600 mt-3 inline-flex items-center space-x-1">
+              <span className="text-xs font-semibold text-emerald-700 mt-3 inline-flex items-center space-x-1">
                 <span>{isHindi ? 'योजना देखें' : 'View Plan'}</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition" />
               </span>

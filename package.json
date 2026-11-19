@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:live": "LIVE_INTEGRATION=true vitest run tests/integration/cpcb-live.test.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },

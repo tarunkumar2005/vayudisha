@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { checkRateLimit, getClientKey } from '@/lib/rate-limit';
 import { getUnifiedAqi } from '@/lib/aqi/aqi-merger';
 
 export const dynamic = 'force-dynamic';
@@ -88,7 +89,20 @@ const COMMUNITY_ACTIONS = [
   },
 ];
 
+// Community plan: 30 req/min per IP
+const RATE_LIMIT = { limit: 30, windowMs: 60_000 };
+
 export async function POST(request: NextRequest) {
+  const clientKey = `community:${getClientKey(request)}`;
+  const rl = checkRateLimit(clientKey, RATE_LIMIT);
+
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = CommunityRequestSchema.safeParse(body);

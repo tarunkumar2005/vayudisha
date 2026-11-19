@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { checkRateLimit, getClientKey } from '@/lib/rate-limit';
 import { getUnifiedAqi } from '@/lib/aqi/aqi-merger';
 import {
   evaluateActivitySafety,
@@ -11,6 +12,9 @@ import { sanitizeProfileForAi } from '@/lib/gemini/sanitizer';
 import { generatePersonalizedGuidance } from '@/lib/gemini/client';
 
 export const dynamic = 'force-dynamic';
+
+// Recommendations endpoint: 20 requests per minute per IP (AI calls are expensive)
+const RATE_LIMIT = { limit: 20, windowMs: 60_000 };
 
 const RequestSchema = z.object({
   cityName: z.string().default('delhi'),
@@ -28,6 +32,19 @@ const RequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const clientKey = `rec:${getClientKey(request)}`;
+  const rl = checkRateLimit(clientKey, RATE_LIMIT);
+
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. AI recommendations are rate-limited to protect service quality.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
+      }
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);

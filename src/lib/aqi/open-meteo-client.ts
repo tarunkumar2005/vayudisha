@@ -225,3 +225,37 @@ function makeErrorForecastResult(error: string): CamsForecastResult {
     error,
   };
 }
+
+/**
+ * Generate synthetic CAMS forecast for offline/mock demonstration testing.
+ * Runs synchronously without external network requests.
+ */
+export function getMockCamsForecast(latitude: number, longitude: number): CamsForecastResult {
+  const points: HourlyForecastPoint[] = [];
+  const now = new Date();
+  for (let i = 0; i < 72; i++) {
+    const d = new Date(now.getTime() + i * 3600 * 1000);
+    points.push({
+      time: d.toISOString(),
+      pm2_5: Math.round(180 + 80 * Math.sin(i / 6)),
+      pm10: Math.round(280 + 100 * Math.sin(i / 6)),
+      no2: 45,
+      so2: 12,
+      co_mg_m3: 1.8,
+      o3: 35,
+      european_aqi: null,
+    });
+  }
+  return {
+    source: 'cams_model_forecast',
+    sourceLabel: 'Copernicus (CAMS) Model Forecast via Open-Meteo',
+    isModelForecast: true,
+    latitude,
+    longitude,
+    timezone: 'Asia/Kolkata',
+    hourly: points,
+    dailySummaries: computeDailySummaries(points),
+    fetchedAt: new Date().toISOString(),
+    apiAvailable: true,
+  };
+}

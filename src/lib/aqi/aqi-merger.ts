@@ -12,7 +12,7 @@
  */
 
 import { fetchCpcbData, type StationReading } from './cpcb-client';
-import { fetchCamsForecast, type CamsForecastResult } from './open-meteo-client';
+import { fetchCamsForecast, getMockCamsForecast, type CamsForecastResult } from './open-meteo-client';
 import { calculateOverallAQI, type AqiResult } from './aqi-calculator';
 import { getCityById, type CityInfo } from '../constants/cities';
 import { MOCK_DELHI_SMOG_CPCB_RESPONSE } from '../../../tests/fixtures/cpcb-sample';
@@ -108,8 +108,12 @@ export async function getUnifiedAqi(
   };
 
   const apiKey = options.cpcbApiKey || process.env.DATA_GOV_IN_API_KEY || '';
+  // Security: Use server-side USE_MOCK_AQI env var. NEXT_PUBLIC_USE_MOCK_AQI is accepted as a
+  // legacy alias but only on the server (aqi-merger always runs server-side in API routes).
+  // Client-side env vars must NOT control server data-source selection in production.
   const forceMock =
     options.useMockFallback ||
+    process.env.USE_MOCK_AQI === 'true' ||
     process.env.NEXT_PUBLIC_USE_MOCK_AQI === 'true' ||
     (!apiKey && process.env.NODE_ENV !== 'production');
 
@@ -151,10 +155,14 @@ export async function getUnifiedAqi(
 
   // Fetch Open-Meteo CAMS forecast in parallel
   let camsResult: CamsForecastResult | null = null;
-  try {
-    camsResult = await fetchCamsForecast(city.latitude, city.longitude, 3);
-  } catch (e) {
-    console.warn('CAMS forecast fetch threw exception:', e);
+  if (!forceMock) {
+    try {
+      camsResult = await fetchCamsForecast(city.latitude, city.longitude, 3, { timeoutMs: 3000 });
+    } catch (e) {
+      console.warn('CAMS forecast fetch threw exception:', e);
+    }
+  } else {
+    camsResult = getMockCamsForecast(city.latitude, city.longitude);
   }
 
   // Analyze CPCB stations

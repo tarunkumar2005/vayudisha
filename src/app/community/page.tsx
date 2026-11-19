@@ -98,7 +98,7 @@ export default function CommunityPage() {
 
           <button
             onClick={handlePrint}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-sm transition"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>{isHindi ? 'प्रिंट / सेव PDF' : 'Print / Save PDF'}</span>
@@ -108,11 +108,13 @@ export default function CommunityPage() {
 
       {/* Community Name Editor (No-Print) */}
       <div className="no-print bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <label className="text-xs font-bold text-slate-700 flex items-center space-x-2">
+        <label htmlFor="community-name-input" className="text-xs font-bold text-slate-700 flex items-center space-x-2">
           <Building2 className="w-4 h-4 text-emerald-600" />
           <span>{isHindi ? 'सोसायटी / कॉलोनी का नाम:' : 'RWA / Society Name:'}</span>
         </label>
         <input
+          id="community-name-input"
+          aria-label={isHindi ? 'सोसायटी / कॉलोनी का नाम' : 'RWA / Society Name'}
           type="text"
           value={communityName}
           onChange={(e) => setCommunityName(e.target.value)}
@@ -130,7 +132,7 @@ export default function CommunityPage() {
               <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 Clean Air Community Advisory
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-600 font-medium">
                 {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
             </div>
@@ -144,7 +146,7 @@ export default function CommunityPage() {
 
           {/* Current Smog Level Badge */}
           <div className="text-left sm:text-right">
-            <span className="text-[11px] font-semibold text-slate-400 block uppercase">
+            <span className="text-[11px] font-semibold text-slate-600 block uppercase">
               Current City AQI
             </span>
             <span
@@ -209,7 +211,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Printable Footer / Verification Seal */}
-        <div className="border-t border-slate-200 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-400">
+        <div className="border-t border-slate-200 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-600 font-medium">
           <div className="flex items-center space-x-2">
             <Shield className="w-3.5 h-3.5 text-emerald-600" />
             <span>References CPCB Graded Response Action Plan (GRAP) & NGT Directives</span>

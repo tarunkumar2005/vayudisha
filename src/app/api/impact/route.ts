@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { checkRateLimit, getClientKey } from '@/lib/rate-limit';
 import {
   calculateModalShiftImpact,
   getThermalInversionGuidance,
@@ -7,6 +8,9 @@ import {
 } from '@/lib/impact/emission-factors';
 
 export const dynamic = 'force-dynamic';
+
+// Impact calculator: 60 req/min (purely computational, no external API)
+const RATE_LIMIT = { limit: 60, windowMs: 60_000 };
 
 const ImpactRequestSchema = z.object({
   currentMode: z.string(),
@@ -16,6 +20,16 @@ const ImpactRequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const clientKey = `impact:${getClientKey(request)}`;
+  const rl = checkRateLimit(clientKey, RATE_LIMIT);
+
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = ImpactRequestSchema.safeParse(body);

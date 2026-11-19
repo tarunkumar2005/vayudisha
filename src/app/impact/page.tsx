@@ -106,10 +106,12 @@ export default function ImpactPage() {
 
           {/* Current Mode */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 block">
+            <label htmlFor="current-mode-select" className="text-xs font-semibold text-slate-700 block">
               {isHindi ? 'वर्तमान साधन' : 'Current Travel Mode'}
             </label>
             <select
+              id="current-mode-select"
+              aria-label={isHindi ? 'वर्तमान साधन' : 'Current Travel Mode'}
               value={currentMode}
               onChange={(e) => setCurrentMode(e.target.value)}
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -124,10 +126,12 @@ export default function ImpactPage() {
 
           {/* Alternative Mode */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 block">
+            <label htmlFor="alt-mode-select" className="text-xs font-semibold text-slate-700 block">
               {isHindi ? 'स्वच्छ या साझा विकल्प' : 'Sustainable Alternative'}
             </label>
             <select
+              id="alt-mode-select"
+              aria-label={isHindi ? 'स्वच्छ या साझा विकल्प' : 'Sustainable Alternative'}
               value={altMode}
               onChange={(e) => setAltMode(e.target.value)}
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800"
@@ -143,10 +147,14 @@ export default function ImpactPage() {
           {/* One-Way Distance Slider */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-slate-700">
-              <span className="font-semibold">{isHindi ? 'एकतरफा दूरी' : 'One-Way Distance'}</span>
-              <span className="font-bold text-emerald-600">{distanceKm} km</span>
+              <label htmlFor="distance-slider" className="font-semibold">
+                {isHindi ? 'एकतरफा दूरी' : 'One-Way Distance'}
+              </label>
+              <span className="font-bold text-emerald-700">{distanceKm} km</span>
             </div>
             <input
+              id="distance-slider"
+              aria-label={isHindi ? 'एकतरफा दूरी' : 'One-Way Distance'}
               type="range"
               min={1}
               max={60}
@@ -160,10 +168,14 @@ export default function ImpactPage() {
           {/* Trips per week */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-slate-700">
-              <span className="font-semibold">{isHindi ? 'सप्ताह में फेरे' : 'Trips Per Week'}</span>
-              <span className="font-bold text-emerald-600">{tripsPerWeek} trips</span>
+              <label htmlFor="trips-slider" className="font-semibold">
+                {isHindi ? 'सप्ताह में फेरे' : 'Trips Per Week'}
+              </label>
+              <span className="font-bold text-emerald-700">{tripsPerWeek} trips</span>
             </div>
             <input
+              id="trips-slider"
+              aria-label={isHindi ? 'सप्ताह में फेरे' : 'Trips Per Week'}
               type="range"
               min={2}
               max={20}
@@ -172,7 +184,7 @@ export default function ImpactPage() {
               onChange={(e) => setTripsPerWeek(Number(e.target.value))}
               className="w-full accent-emerald-600 cursor-pointer"
             />
-            <span className="text-[11px] text-slate-400 block">
+            <span className="text-[11px] text-slate-600 block">
               {isHindi ? '5 दिन आने-जाने का सफर = 10 फेरे' : 'Standard 5-day round-trip = 10 trips'}
             </span>
           </div>
@@ -191,7 +203,7 @@ export default function ImpactPage() {
                   <span className="text-2xl font-black text-emerald-950 mt-1 block">
                     {calcResult.monthlySavedCo2eKg} <span className="text-xs font-normal">kg</span>
                   </span>
-                  <span className="text-[11px] text-emerald-600">
+                  <span className="text-[11px] text-emerald-700 font-medium">
                     {calcResult.weeklySavedCo2eKg} kg / week
                   </span>
                 </div>
@@ -244,7 +256,7 @@ export default function ImpactPage() {
               </div>
 
               {/* Source & Citation Note */}
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-600 font-medium">
                 🔬 {calcResult.currentFactor.source} & {calcResult.alternativeFactor.source}. {calcResult.disclaimer.en}
               </p>
             </>
@@ -288,7 +300,7 @@ export default function ImpactPage() {
             </div>
           </div>
 
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-600 font-medium">
             ℹ️ {isHindi ? inversionGuidance.disclaimer.hi : inversionGuidance.disclaimer.en}
           </p>
         </div>
@@ -322,7 +334,7 @@ export default function ImpactPage() {
                       href={mode.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-1 text-emerald-600 hover:underline"
+                      className="inline-flex items-center space-x-1 text-emerald-700 hover:underline"
                     >
                       <span>{mode.source}</span>
                       <ExternalLink className="w-2.5 h-2.5 ml-0.5" />

@@ -43,6 +43,18 @@ export const CpcbRecordSchema = z.object({
     .union([z.string(), z.number()])
     .nullish()
     .transform((v) => (v != null ? toFiniteNumber(v) : null)),
+  min_value: z
+    .union([z.string(), z.number()])
+    .nullish()
+    .transform((v) => (v != null ? toFiniteNumber(v) : null)),
+  max_value: z
+    .union([z.string(), z.number()])
+    .nullish()
+    .transform((v) => (v != null ? toFiniteNumber(v) : null)),
+  avg_value: z
+    .union([z.string(), z.number()])
+    .nullish()
+    .transform((v) => (v != null ? toFiniteNumber(v) : null)),
   pollutant_unit: z.string().optional(),
   latitude: z
     .union([z.string(), z.number()])
@@ -243,13 +255,14 @@ function processRecords(apiData: CpcbApiResponse): CpcbDataResult {
   let invalidRecords = 0;
 
   for (const record of apiData.records) {
-    // Validate the pollutant average is usable
-    if (record.pollutant_avg === null || record.pollutant_avg === undefined) {
+    // Validate the pollutant average is usable (supports both pollutant_avg and avg_value)
+    const rawAvg = record.pollutant_avg ?? record.avg_value;
+    if (rawAvg === null || rawAvg === undefined) {
       invalidRecords++;
       continue;
     }
 
-    const avg = record.pollutant_avg;
+    const avg = rawAvg;
     if (avg < 0 || !Number.isFinite(avg)) {
       invalidRecords++;
       continue;
