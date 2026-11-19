@@ -147,6 +147,8 @@ export interface CpcbClientOptions {
   baseUrl?: string;
   /** Override timeout for testing */
   timeoutMs?: number;
+  /** Override maximum record limit */
+  limit?: number;
 }
 
 /**
@@ -166,7 +168,7 @@ export async function fetchCpcbData(
   const url = new URL(baseUrl);
   url.searchParams.set('api-key', options.apiKey);
   url.searchParams.set('format', 'json');
-  url.searchParams.set('limit', MAX_RECORDS_PER_REQUEST.toString());
+  url.searchParams.set('limit', (options.limit ?? MAX_RECORDS_PER_REQUEST).toString());
   url.searchParams.set('filters[city]', city);
 
   try {
