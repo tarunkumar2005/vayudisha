@@ -60,7 +60,7 @@ describe('Live Gemini Developer API Integration', () => {
       expect(result.data.dailySmogWindowTip).toBeTruthy();
       expect(result.data.safetyDisclaimer).toBeTruthy();
       expect(result.isAiGenerated).toBe(true);
-      expect(['gemini-3.8-flash', 'gemini-3.5-flash-lite']).toContain(result.modelUsed);
+      expect(['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.8-flash']).toContain(result.modelUsed);
     },
     30_000
   );

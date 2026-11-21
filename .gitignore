@@ -1,42 +1,47 @@
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
-# testing
-/coverage
-/test-results
-/playwright-report
-/blob-report
+# testing & coverage
+/coverage/
+/test-results/
+/playwright-report/
+/blob-report/
 
 # next.js build output
 /.next/
 /out/
-
-# production
-/build
+/dist/
+/build/
+/.turbo/
+/.cache/
 
 # debug logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
 # local env files - NEVER COMMIT SECRETS
-.env*.local
-.env
+.env*
 !.env.example
+!.env.test.example
 
 # vercel
-.vercel
+.vercel/
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# OS files
+# OS & editor files
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
 *.pem
 
 # Large media files

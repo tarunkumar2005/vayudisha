@@ -71,10 +71,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: `USE_MOCK_AQI=true NO_PROXY=localhost,127.0.0.1,::1 npx next start -p ${PORT}`,
+    command: `USE_MOCK_AQI=true NO_PROXY=localhost,127.0.0.1,::1 ./node_modules/.bin/next start -p ${PORT}`,
     url: BASE_URL,
     reuseExistingServer: false,
-    timeout: 30_000,
+    timeout: 60_000,
     env: {
       USE_MOCK_AQI: 'true',
       GEMINI_API_KEY: '',

@@ -233,16 +233,23 @@ function makeErrorForecastResult(error: string): CamsForecastResult {
 export function getMockCamsForecast(latitude: number, longitude: number): CamsForecastResult {
   const points: HourlyForecastPoint[] = [];
   const now = new Date();
+  // Hill/mountain stations (e.g. Shimla: lat ~31.1, lon ~77.17) have clean mountain air
+  const isMountainStation = latitude > 30 && latitude < 33 && longitude > 75 && longitude < 79;
+  const basePm25 = isMountainStation ? 22 : 180;
+  const variancePm25 = isMountainStation ? 10 : 80;
+  const basePm10 = isMountainStation ? 35 : 280;
+  const variancePm10 = isMountainStation ? 15 : 100;
+
   for (let i = 0; i < 72; i++) {
     const d = new Date(now.getTime() + i * 3600 * 1000);
     points.push({
       time: d.toISOString(),
-      pm2_5: Math.round(180 + 80 * Math.sin(i / 6)),
-      pm10: Math.round(280 + 100 * Math.sin(i / 6)),
-      no2: 45,
-      so2: 12,
-      co_mg_m3: 1.8,
-      o3: 35,
+      pm2_5: Math.round(basePm25 + variancePm25 * Math.sin(i / 6)),
+      pm10: Math.round(basePm10 + variancePm10 * Math.sin(i / 6)),
+      no2: isMountainStation ? 12 : 45,
+      so2: isMountainStation ? 4 : 12,
+      co_mg_m3: isMountainStation ? 0.4 : 1.8,
+      o3: isMountainStation ? 28 : 35,
       european_aqi: null,
     });
   }

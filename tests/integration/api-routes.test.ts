@@ -18,6 +18,51 @@ describe('Next.js API Route Handlers Integration', () => {
     expect(res.headers.get('Cache-Control')).toContain('s-maxage=300');
   });
 
+  it('GET /api/aqi?city=shimla handles CAMS model forecast without error', async () => {
+    const req = new NextRequest('http://localhost:3000/api/aqi?city=shimla');
+    const res = await getAqiHandler(req);
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.city.id).toBe('shimla');
+    expect(json.current.isModelForecast).toBe(true);
+    expect(json.current.dataSource).toBe('cams_model_forecast');
+  });
+
+  it('GET /api/aqi?city=unknown rejects unsupported city with HTTP 400 (H-04)', async () => {
+    const req = new NextRequest('http://localhost:3000/api/aqi?city=definitely-not-a-supported-city');
+    const res = await getAqiHandler(req);
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain('Unknown or unsupported city');
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
+  });
+
+  it('POST /api/recommendations rejects unsupported city with HTTP 400 (H-04, H-05)', async () => {
+    const req = new NextRequest('http://localhost:3000/api/recommendations', {
+      method: 'POST',
+      body: JSON.stringify({
+        cityName: 'unknown-city-test@example.com',
+        language: 'en',
+        profile: {
+          hasInfantsOrToddlers: false,
+          hasSchoolChildren: false,
+          hasSeniors: false,
+          hasSensitiveMembers: false,
+          commuteMode: 'car',
+          budgetTier: 'low',
+        },
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const res = await postRecommendationsHandler(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain('unsupported city');
+  });
+
   it('POST /api/recommendations validates payload and returns personalized guidance', async () => {
     const req = new NextRequest('http://localhost:3000/api/recommendations', {
       method: 'POST',

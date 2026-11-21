@@ -104,7 +104,7 @@ function getUpstashRatelimit(config: RateLimitConfig): Ratelimit | null {
       redis,
       limiter: Ratelimit.slidingWindow(config.limit, `${windowSeconds} s`),
       analytics: false,
-      prefix: 'saanssaathi_rl',
+      prefix: 'vayudisha_rl',
     });
     upstashConfigSignature = signature;
     return upstashRatelimitInstance;

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" width="100%" height="100%" aria-label="VayuDisha Stacked Logo">
+  <defs>
+    <linearGradient id="stkLeaf" x1="20%" y1="90%" x2="80%" y2="10%">
+      <stop offset="0%" stop-color="#174B36" />
+      <stop offset="60%" stop-color="#159C89" />
+      <stop offset="100%" stop-color="#1FAF96" />
+    </linearGradient>
+    <linearGradient id="stkBreeze" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#A7C5A0" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#159C89" />
+    </linearGradient>
+    <linearGradient id="stkSaffron" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E07A18" />
+      <stop offset="100%" stop-color="#EBA347" />
+    </linearGradient>
+  </defs>
+
+  <!-- === EMBLEM / SYMBOL (Centered around X: 120, Y: 60) === -->
+  <g transform="translate(70, 10) scale(1.0)">
+    <circle cx="50" cy="50" r="42" stroke="#A7C5A0" stroke-width="2" stroke-dasharray="4 6" opacity="0.4" />
+    <!-- Lower breeze -->
+    <path d="M 12 66 C 24 66, 32 78, 48 76 C 64 74, 76 60, 84 46" stroke="url(#stkBreeze)" stroke-width="5" stroke-linecap="round" />
+    <!-- Upper breeze -->
+    <path d="M 18 42 C 28 32, 42 34, 54 38 C 66 42, 74 36, 86 24" stroke="url(#stkBreeze)" stroke-width="4" stroke-linecap="round" opacity="0.8" />
+    <!-- Leaf -->
+    <path d="M 28 72 C 24 50, 42 26, 76 18 C 78 44, 60 76, 28 72 Z" fill="url(#stkLeaf)" />
+    <!-- Leaf Spine -->
+    <path d="M 30 70 C 44 58, 58 42, 74 20" stroke="#F6F4EB" stroke-width="2.5" stroke-linecap="round" opacity="0.9" />
+    <!-- Saffron Pointer (Disha) -->
+    <path d="M 50 48 L 78 16 L 68 40 L 58 44 Z" fill="url(#stkSaffron)" />
+    <circle cx="78" cy="16" r="3.5" fill="#EBA347" />
+  </g>
+
+  <!-- === TYPOGRAPHY / WORDMARK === -->
+  <text x="120" y="142" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Inter, sans-serif" font-size="30" font-weight="800" letter-spacing="-0.5">
+    <tspan fill="#174B36">Vayu</tspan><tspan fill="#159C89">Disha</tspan>
+  </text>
+
+  <!-- Devanagari Script Badge: वायुदिशा -->
+  <g transform="translate(80, 156)">
+    <rect x="0" y="0" width="80" height="24" rx="6" fill="#174B36" fill-opacity="0.08" />
+    <text x="40" y="17" text-anchor="middle" font-family="'Noto Sans Devanagari', 'Kohinoor Devanagari', system-ui, sans-serif" font-size="14" font-weight="700" fill="#174B36">
+      वायुदिशा
+    </text>
+  </g>
+
+  <!-- Tagline / Descriptor -->
+  <text x="120" y="204" text-anchor="middle" font-family="system-ui, -apple-system, Inter, sans-serif" font-size="10" font-weight="600" fill="#587668" letter-spacing="1.2">
+    KNOW YOUR AIR
+  </text>
+  <text x="120" y="218" text-anchor="middle" font-family="system-ui, -apple-system, Inter, sans-serif" font-size="10" font-weight="600" fill="#587668" letter-spacing="1.2">
+    CHOOSE A BETTER DIRECTION
+  </text>
+</svg>

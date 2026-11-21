@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUnifiedAqi } from '@/lib/aqi/aqi-merger';
+import { getCityById } from '@/lib/constants/cities';
 import { checkRateLimit, getClientKey } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
           'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)),
           'X-RateLimit-Limit': String(RATE_LIMIT.limit),
           'X-RateLimit-Remaining': '0',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
         },
       }
     );
@@ -28,16 +30,42 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const rawCity = searchParams.get('city') || 'delhi';
-    // Validate and sanitize city parameter to prevent cache key pollution
-    const city = rawCity.slice(0, 50).replace(/[^a-zA-Z0-9_\-\s]/g, '').trim() || 'delhi';
+    const rawStation = searchParams.get('station');
+    // Validate and sanitize parameters to prevent injection or cache key pollution
+    const cityParam = rawCity.slice(0, 50).replace(/[^a-zA-Z0-9_\-\s]/g, '').trim() || 'delhi';
+    const station = rawStation ? rawStation.slice(0, 100).trim() : undefined;
 
-    const aqiData = await getUnifiedAqi(city);
+    // Reject unknown cities with HTTP 400 instead of silently substituting Delhi (H-04)
+    const canonicalCity = getCityById(cityParam);
+    if (!canonicalCity) {
+      return NextResponse.json(
+        { error: `Unknown or unsupported city '${cityParam}'. Please request a supported Indian city identifier.` },
+        {
+          status: 400,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'X-RateLimit-Limit': String(RATE_LIMIT.limit),
+            'X-RateLimit-Remaining': String(rl.remaining),
+          },
+        }
+      );
+    }
+
+    const aqiData = await getUnifiedAqi(canonicalCity.id, { preferredStation: station });
+
+    // Outage and fallback responses must NEVER be cached publicly by CDN (H-02, M-15)
+    const isOutageOrUnavailable =
+      aqiData.current.dataSource === 'unavailable' ||
+      (!aqiData.status.officialCpcbAvailable && !aqiData.status.camsForecastAvailable);
+
+    const cacheHeader = isOutageOrUnavailable
+      ? 'no-store, no-cache, must-revalidate'
+      : 'public, s-maxage=300, stale-while-revalidate=600';
 
     return NextResponse.json(aqiData, {
       status: 200,
       headers: {
-        // AQI data updates hourly at CPCB. Serve fresh for 5 min, stale-while-revalidate for 10 min.
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Cache-Control': cacheHeader,
         'X-RateLimit-Limit': String(RATE_LIMIT.limit),
         'X-RateLimit-Remaining': String(rl.remaining),
       },

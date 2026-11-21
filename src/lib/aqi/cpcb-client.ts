@@ -166,6 +166,8 @@ export interface CpcbClientOptions {
   limit?: number;
   /** Force bypass cache */
   skipCache?: boolean;
+  /** Internal retry flag for 429 rate limit backoff */
+  _isRetry?: boolean;
 }
 
 /**
@@ -232,6 +234,13 @@ export async function fetchCpcbData(
       }
 
       if (response.status === 429) {
+        const retryCount = ((options as { _retryCount?: number })._retryCount || 0);
+        if (retryCount < 2) {
+          // Pause with progressive backoff (2000ms, then 3000ms) to respect rate limit burst
+          const backoff = (retryCount + 1) * 2000;
+          await new Promise((r) => setTimeout(r, backoff));
+          return fetchCpcbData(city, { ...options, _retryCount: retryCount + 1, _isRetry: true } as CpcbClientOptions);
+        }
         if (cached && cached.data.stations.length > 0) {
           return {
             ...cached.data,
@@ -286,6 +295,74 @@ export async function fetchCpcbData(
       'Network connectivity failure reaching data.gov.in'
     );
   }
+}
+
+/**
+ * Fetches CPCB station readings for a city by checking candidate stations with bounded concurrency.
+ * This solves data.gov.in's 10-record pagination ceiling where broad city queries split rows across stations,
+ * leaving each station with insufficient (<3) pollutants.
+ */
+export async function fetchCpcbStationsForCity(
+  city: string,
+  candidateStations: string[],
+  options: CpcbClientOptions
+): Promise<CpcbDataResult> {
+  // If a specific station was requested, query only that station
+  if (options.station) {
+    return fetchCpcbData(city, options);
+  }
+
+  // If no candidate stations are registered (e.g. locations with no continuous CAAQMS stations)
+  if (!candidateStations || candidateStations.length === 0) {
+    return makeErrorResult(
+      `No active CPCB CAAQMS monitoring station registered for ${city} on data.gov.in`,
+      'upstream_server_error',
+      `Official CPCB ground station data is currently unavailable for ${city}. Atmospheric model forecast will be used.`
+    );
+  }
+
+  // Query up to 3 candidate stations concurrently with bounded concurrency
+  const candidatesToQuery = candidateStations.slice(0, 3);
+  const results = await Promise.allSettled(
+    candidatesToQuery.map((st) =>
+      fetchCpcbData(city, {
+        ...options,
+        station: st,
+        timeoutMs: options.timeoutMs ?? 7000,
+      })
+    )
+  );
+
+  const successfulStations: StationReading[] = [];
+  let totalRecords = 0;
+  let invalidRecords = 0;
+  let lastSuccessfulStatus: CpcbDataResult | null = null;
+
+  for (const res of results) {
+    if (res.status === 'fulfilled' && res.value.apiAvailable && res.value.stations.length > 0) {
+      successfulStations.push(...res.value.stations);
+      totalRecords += res.value.totalRecords;
+      invalidRecords += res.value.invalidRecords;
+      lastSuccessfulStatus = res.value;
+    }
+  }
+
+  if (successfulStations.length > 0 && lastSuccessfulStatus) {
+    return {
+      source: 'cpcb',
+      sourceLabel: 'CPCB via data.gov.in',
+      stations: successfulStations,
+      fetchedAt: new Date().toISOString(),
+      totalRecords,
+      invalidRecords,
+      apiAvailable: true,
+      apiStatus: 'authenticated_success',
+      statusDetails: `Successfully fetched telemetry from ${successfulStations.length} CPCB stations in ${city}`,
+    };
+  }
+
+  // Fallback to broad city query if none of the candidate stations answered
+  return fetchCpcbData(city, options);
 }
 
 // --- Processing ---

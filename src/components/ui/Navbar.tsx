@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { UI_STRINGS } from '@/lib/i18n/translations';
 import { SUPPORTED_CITIES } from '@/lib/constants/cities';
+import { VayuDishaLogo } from '@/components/brand/VayuDishaLogo';
 import { Wind, ShieldAlert, Car, Users, Globe } from 'lucide-react';
 
 export function Navbar() {
@@ -13,35 +14,33 @@ export function Navbar() {
   const { language, setLanguage, selectedCity, setSelectedCity } = useApp();
 
   const navLinks = [
-    { href: '/', label: UI_STRINGS.nav.dashboard[language], icon: Wind },
+    { href: '/dashboard', label: UI_STRINGS.nav.dashboard[language], icon: Wind },
     { href: '/planner', label: UI_STRINGS.nav.planner[language], icon: ShieldAlert },
     { href: '/impact', label: UI_STRINGS.nav.impact[language], icon: Car },
     { href: '/community', label: UI_STRINGS.nav.community[language], icon: Users },
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand */}
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-sm shadow-emerald-600/30">
-                <Wind className="w-6 h-6 animate-pulse" />
+    <header className="sticky top-0 z-50 bg-[#F6F4EB]/95 backdrop-blur-md border-b border-[#E2DDD1] transition-colors w-full overflow-x-clip">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-18 py-2 gap-2">
+          {/* Brand Link */}
+          <div className="flex items-center shrink-0">
+            <Link
+              href="/"
+              className="group focus:outline-none focus:ring-2 focus:ring-[#0F766E] rounded-xl p-1 -m-1 transition-transform active:scale-95"
+            >
+              <div className="block sm:hidden">
+                <VayuDishaLogo variant="horizontal" size="sm" />
               </div>
-              <div>
-                <span className="text-xl font-bold tracking-tight text-slate-900">
-                  Saans<span className="text-emerald-600">Saathi</span>
-                </span>
-                <span className="hidden sm:inline-block ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  साँस साथी
-                </span>
+              <div className="hidden sm:block">
+                <VayuDishaLogo variant="horizontal" size="md" />
               </div>
             </Link>
           </div>
 
-          {/* Nav Links */}
-          <nav className="hidden md:flex items-center space-x-1" aria-label="Main navigation">
+          {/* Desktop Nav Links (Only at lg: 1024px+ to avoid 768px tablet overflow - M-06) */}
+          <nav className="hidden lg:flex items-center space-x-1.5" aria-label="Main navigation">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -49,13 +48,13 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all duration-150 ${
                     isActive
-                      ? 'bg-emerald-50 text-emerald-700 font-semibold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'bg-[#174B36] text-[#F6F4EB] shadow-sm'
+                      : 'text-[#2D4A3E] hover:text-[#174B36] hover:bg-[#EAE5D7]'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#A7C5A0]' : 'text-[#0F766E]'}`} />
                   <span>{link.label}</span>
                 </Link>
               );
@@ -63,35 +62,38 @@ export function Navbar() {
           </nav>
 
           {/* City Selector & Language Toggle */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
             {/* City Picker */}
-            <select
-              value={selectedCity}
-              aria-label="Select City"
-              onChange={(e) => setSelectedCity(e.target.value)}
-              className="text-xs sm:text-sm font-medium bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {SUPPORTED_CITIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {language === 'hi' ? c.name.hi : c.name.en}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={selectedCity}
+                aria-label="Select City"
+                onChange={(e) => setSelectedCity(e.target.value)}
+                className="text-xs sm:text-sm font-bold bg-white border border-[#E2DDD1] text-[#174B36] rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 pr-7 sm:pr-8 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0F766E] cursor-pointer hover:border-[#0F766E] transition-colors max-w-[115px] sm:max-w-none truncate"
+              >
+                {SUPPORTED_CITIES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {language === 'hi' ? c.name.hi : c.name.en}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Language Switch */}
             <button
               onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
-              className="flex items-center space-x-1 px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors"
+              className="flex items-center space-x-1 sm:space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-bold text-[#174B36] bg-white hover:bg-[#EAE5D7] rounded-xl border border-[#E2DDD1] shadow-sm transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0F766E] shrink-0"
               title={language === 'en' ? 'Switch to Hindi' : 'अंग्रेज़ी में बदलें'}
             >
-              <Globe className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
-              <span>{UI_STRINGS.buttons.switchLanguage[language]}</span>
+              <Globe className="w-3.5 h-3.5 text-[#0F766E]" aria-hidden="true" />
+              <span className="hidden sm:inline">{UI_STRINGS.buttons.switchLanguage[language]}</span>
+              <span className="inline sm:hidden">{language === 'en' ? 'हिन्दी' : 'EN'}</span>
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation bar */}
-        <div className="flex md:hidden overflow-x-auto py-2 space-x-2 border-t border-slate-100 scrollbar-none">
+        {/* Mobile & Tablet Navigation bar (lg:hidden) */}
+        <div className="flex lg:hidden overflow-x-auto py-2 space-x-2 border-t border-[#E2DDD1]/60 scrollbar-none">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -99,13 +101,13 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap ${
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
                   isActive
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-[#174B36] text-[#F6F4EB]'
+                    : 'bg-white text-[#2D4A3E] hover:text-[#174B36] border border-[#E2DDD1]'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#A7C5A0]' : 'text-[#0F766E]'}`} />
                 <span>{link.label}</span>
               </Link>
             );
@@ -115,3 +117,4 @@ export function Navbar() {
     </header>
   );
 }
+export default Navbar;

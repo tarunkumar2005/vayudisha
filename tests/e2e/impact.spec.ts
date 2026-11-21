@@ -30,7 +30,7 @@ test.describe('Impact calculator', () => {
 
   test('chart or calculation result is rendered', async ({ page }) => {
     // Recharts renders SVG elements
-    const chart = page.locator('svg').first();
+    const chart = page.locator('.recharts-surface, svg:visible').first();
     await expect(chart).toBeVisible({ timeout: 10_000 });
   });
 

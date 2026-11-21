@@ -18,10 +18,20 @@ import {
   validateAndCleanAiResponse,
 } from './sanitizer';
 
-const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-const FALLBACK_MODEL = 'gemini-3.5-flash-lite';
+const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
+const AI_TIMEOUT_MS = 6000;
 
-const SYSTEM_INSTRUCTION = `You are SaansSaathi (साँस साथी - "Breath Companion"), an empathetic, scientifically grounded urban air quality advisor for families in India navigating severe winter smog.
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`Gemini API request timed out after ${timeoutMs}ms`)), timeoutMs);
+    }),
+  ]);
+}
+
+const SYSTEM_INSTRUCTION = `You are VayuDisha (वायुदिशा - "Air Direction"), an empathetic, scientifically grounded urban air quality and sustainability advisor for families in India navigating severe winter smog.
 
 PRIMARY DIRECTIVES:
 1. You personalize and explain ONLY the pre-approved recommendations provided in the input prompt. Never invent new health interventions or unsupported statistics.
@@ -99,15 +109,18 @@ Produce a warm, practical JSON response matching this schema:
     let usedModel = PRIMARY_MODEL;
 
     try {
-      const response = await ai.models.generateContent({
-        model: PRIMARY_MODEL,
-        contents: userPrompt,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-          temperature: 0.2, // Low temperature for factual precision
-        },
-      });
+      const response = await withTimeout(
+        ai.models.generateContent({
+          model: PRIMARY_MODEL,
+          contents: userPrompt,
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            responseMimeType: 'application/json',
+            temperature: 0.2, // Low temperature for factual precision
+          },
+        }),
+        AI_TIMEOUT_MS
+      );
       responseText = response.text?.trim() || '';
     } catch (primaryErr: unknown) {
       const errObj = primaryErr as { status?: number; code?: number; error?: { code?: number } };
@@ -119,15 +132,18 @@ Produce a warm, practical JSON response matching this schema:
       );
 
       try {
-        const fallbackRes = await ai.models.generateContent({
-          model: FALLBACK_MODEL,
-          contents: userPrompt,
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-            responseMimeType: 'application/json',
-            temperature: 0.2,
-          },
-        });
+        const fallbackRes = await withTimeout(
+          ai.models.generateContent({
+            model: FALLBACK_MODEL,
+            contents: userPrompt,
+            config: {
+              systemInstruction: SYSTEM_INSTRUCTION,
+              responseMimeType: 'application/json',
+              temperature: 0.2,
+            },
+          }),
+          AI_TIMEOUT_MS
+        );
         responseText = fallbackRes.text?.trim() || '';
         usedModel = FALLBACK_MODEL;
       } catch (fallbackErr) {
@@ -140,7 +156,10 @@ Produce a warm, practical JSON response matching this schema:
       }
     }
 
-    const validation = validateAndCleanAiResponse(responseText);
+    const validation = validateAndCleanAiResponse(
+      responseText,
+      context.approvedRecommendations.map((r) => r.id)
+    );
 
     if (validation.success) {
       return {

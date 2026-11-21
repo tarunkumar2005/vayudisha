@@ -61,6 +61,21 @@ test.describe('Accessibility (WCAG 2.2 AA) — axe-core', () => {
     expect(critical, `Critical/serious axe violations on /: ${critical.map((v) => v.id).join(', ')}`).toHaveLength(0);
   });
 
+  test('Dashboard /dashboard — no critical/serious axe violations', async ({ page }) => {
+    await page.goto('/dashboard');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
+
+    const violations = await runAxe(page);
+    const critical = violations.filter((v) => CRITICAL_IMPACTS.has(v.impact));
+
+    if (critical.length > 0) {
+      console.error('Axe violations on /dashboard:', critical.map((v) => `${v.id}: ${v.description}`).join('; '));
+    }
+
+    expect(critical, `Critical/serious axe violations on /dashboard: ${critical.map((v) => v.id).join(', ')}`).toHaveLength(0);
+  });
+
   test('Planner /planner — no critical/serious axe violations', async ({ page }) => {
     await page.goto('/planner');
     await page.waitForLoadState('domcontentloaded');
