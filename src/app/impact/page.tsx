@@ -252,7 +252,30 @@ export default function ImpactPage() {
               </div>
 
               {/* Bar Comparison Chart */}
-              <div className="w-full h-52">
+              <div
+                className="w-full h-52"
+                role="region"
+                aria-label={isHindi ? 'सफर कार्बन उत्सर्जन तुलनात्मक बार चार्ट' : 'Commute carbon emissions comparative bar chart'}
+              >
+                <div className="sr-only">
+                  <table>
+                    <caption>{isHindi ? 'सफर कार्बन उत्सर्जन तुलना' : 'Commute Carbon Emissions Comparison'}</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">{isHindi ? 'मोड' : 'Mode'}</th>
+                        <th scope="col">{isHindi ? 'साप्ताहिक CO2e (किग्रा)' : 'Weekly CO2e (kg)'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {chartData.map((d, i) => (
+                        <tr key={i}>
+                          <td>{d.name}</td>
+                          <td>{d['Weekly CO2e (kg)']}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ECE7D8" />

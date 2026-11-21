@@ -49,7 +49,7 @@ export function SourceBadge({
             </span>
           ) : (
             <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-[#174B36]/10 text-[#174B36] font-bold border border-[#174B36]/20">
-              <Building2 className="w-3.5 h-3.5 text-[#159C89]" />
+              <Building2 className="w-3.5 h-3.5 text-[#0F766E]" />
               <span>
                 {isDerivedEstimate
                   ? (isHindi ? 'व्युत्पन्न सीपीसीबी उप-सूचकांक अनुमान' : 'Derived CPCB Sub-Index Estimate')
@@ -61,7 +61,7 @@ export function SourceBadge({
           {/* Freshness Badge */}
           {isFresh ? (
             <span className="inline-flex items-center space-x-1 text-[#174B36] bg-[#A7C5A0]/20 px-2.5 py-1 rounded-xl border border-[#A7C5A0]/50 font-bold">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#159C89]" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#0F766E]" />
               <span>{UI_STRINGS.aqiLabels.freshReading[language]}</span>
             </span>
           ) : (

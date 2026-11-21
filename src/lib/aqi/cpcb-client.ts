@@ -145,7 +145,8 @@ interface CpcbCacheEntry {
   cachedAt: number;
 }
 const cpcbMemoryCache = new Map<string, CpcbCacheEntry>();
-const CPCB_CACHE_TTL_MS = 15 * 60 * 1000; // 15-minute fresh cache
+export const CPCB_CACHE_TTL_MS = 15 * 60 * 1000; // 15-minute fresh cache for successful readings
+export const CPCB_RATE_LIMIT_TTL_MS = 2 * 60 * 1000; // 2-minute cool-off cache for 429 rate-limited responses
 
 /** Clear memory cache (useful for tests) */
 export function clearCpcbCache(): void {
@@ -168,6 +169,8 @@ export interface CpcbClientOptions {
   skipCache?: boolean;
   /** Internal retry flag for 429 rate limit backoff */
   _isRetry?: boolean;
+  /** Internal retry counter for 429 rate limit backoff */
+  _retryCount?: number;
 }
 
 /**
@@ -185,9 +188,12 @@ export async function fetchCpcbData(
   const now = Date.now();
   const cached = cpcbMemoryCache.get(cacheKey);
 
-  // Return fresh in-memory cache (< 15 mins old) to prevent burning data.gov.in rate limits
-  if (!options.skipCache && cached && (now - cached.cachedAt < CPCB_CACHE_TTL_MS)) {
-    return cached.data;
+  // Return fresh in-memory cache (< 15 mins for success, 2 mins for 429) to prevent burning data.gov.in rate limits
+  if (!options.skipCache && cached) {
+    const ttl = cached.data.apiStatus === 'rate_limited' ? CPCB_RATE_LIMIT_TTL_MS : CPCB_CACHE_TTL_MS;
+    if (now - cached.cachedAt < ttl) {
+      return cached.data;
+    }
   }
 
   const baseUrl = options.baseUrl ?? CPCB_BASE_URL;
@@ -234,12 +240,12 @@ export async function fetchCpcbData(
       }
 
       if (response.status === 429) {
-        const retryCount = ((options as { _retryCount?: number })._retryCount || 0);
+        const retryCount = options._retryCount || 0;
         if (retryCount < 2) {
           // Pause with progressive backoff (2000ms, then 3000ms) to respect rate limit burst
           const backoff = (retryCount + 1) * 2000;
           await new Promise((r) => setTimeout(r, backoff));
-          return fetchCpcbData(city, { ...options, _retryCount: retryCount + 1, _isRetry: true } as CpcbClientOptions);
+          return fetchCpcbData(city, { ...options, _retryCount: retryCount + 1, _isRetry: true });
         }
         if (cached && cached.data.stations.length > 0) {
           return {

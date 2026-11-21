@@ -131,4 +131,44 @@ describe('CPCB Response Schema & Processing', () => {
       global.fetch = originalFetch;
     }
   });
+
+  it('caches HTTP 429 rate limit response for 2 minutes and expires thereafter', async () => {
+    let callCount = 0;
+    const mockFetcher = async () => {
+      callCount++;
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    const originalFetch = global.fetch;
+    global.fetch = mockFetcher as unknown as typeof fetch;
+
+    try {
+      // First call (bypass progressive backoff in test by passing _retryCount: 2)
+      const res1 = await fetchCpcbData('Delhi', { apiKey: 'test-key', _retryCount: 2 });
+      expect(res1.apiStatus).toBe('rate_limited');
+      expect(callCount).toBe(1);
+
+      // Second call immediately within 2 minutes should hit the rate-limit cache without fetching
+      const res2 = await fetchCpcbData('Delhi', { apiKey: 'test-key', _retryCount: 2 });
+      expect(res2.apiStatus).toBe('rate_limited');
+      expect(callCount).toBe(1); // Cached, no extra network call
+
+      // Advance time beyond 2-minute TTL (e.g. 125,000 ms) by manipulating Date.now or cache
+      const originalDateNow = Date.now;
+      Date.now = () => originalDateNow() + 125000;
+
+      try {
+        const res3 = await fetchCpcbData('Delhi', { apiKey: 'test-key', _retryCount: 2 });
+        expect(res3.apiStatus).toBe('rate_limited');
+        expect(callCount).toBe(2); // Cache expired after 2 minutes, new fetch triggered
+      } finally {
+        Date.now = originalDateNow;
+      }
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
 });

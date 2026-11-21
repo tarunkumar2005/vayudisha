@@ -77,8 +77,33 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="w-full h-64 mt-2">
+      {/* Chart Container with Screen Reader Table */}
+      <div
+        className="w-full h-64 mt-2"
+        role="region"
+        aria-label={isHindi ? '24 घंटे का वायुमंडलीय पूर्वानुमान चार्ट' : '24-hour atmospheric forecast trend chart'}
+      >
+        <div className="sr-only">
+          <table>
+            <caption>{isHindi ? '24 घंटे का प्रति घंटा पूर्वानुमान डेटा' : '24-Hour Hourly Forecast Data'}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{isHindi ? 'समय' : 'Time'}</th>
+                <th scope="col">PM2.5 (µg/m³)</th>
+                <th scope="col">PM10 (µg/m³)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chartData.map((d, i) => (
+                <tr key={i}>
+                  <td>{d.time}</td>
+                  <td>{d['PM2.5']}</td>
+                  <td>{d.PM10}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>

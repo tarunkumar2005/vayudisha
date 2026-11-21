@@ -111,6 +111,45 @@ describe('Unified AQI Merger & Critical Rules Compliance', () => {
     expect(result.status.notice?.hi).toContain('आधिकारिक सीपीसीबी स्टेशन डेटा उपलब्ध नहीं है');
   });
 
+  it('handles total outage gracefully when both CPCB and CAMS are unavailable', async () => {
+    vi.spyOn(CpcbClient, 'fetchCpcbData').mockResolvedValueOnce({
+      source: 'cpcb',
+      sourceLabel: 'CPCB via data.gov.in',
+      stations: [],
+      fetchedAt: new Date().toISOString(),
+      totalRecords: 0,
+      invalidRecords: 0,
+      apiAvailable: false,
+      apiStatus: 'upstream_server_error',
+      statusDetails: 'CPCB server error',
+    });
+
+    vi.spyOn(CamsClient, 'fetchCamsForecast').mockResolvedValueOnce({
+      source: 'cams_model_forecast',
+      sourceLabel: 'Copernicus (CAMS) Model Forecast via Open-Meteo',
+      isModelForecast: true,
+      latitude: 28.61,
+      longitude: 77.2,
+      timezone: 'Asia/Kolkata',
+      hourly: [],
+      dailySummaries: [],
+      fetchedAt: new Date().toISOString(),
+      apiAvailable: false,
+      error: 'CAMS network error',
+    });
+
+    const result = await getUnifiedAqi('delhi', { useMockFallback: false });
+    expect(result.current.dataSource).toBe('unavailable');
+    expect(result.current.aqi).toBeNull();
+    expect(result.current.category).toBe('Data Unavailable');
+    expect(result.current.categoryHindi).toBe('डेटा अनुपलब्ध');
+    expect(result.forecast).toBeNull();
+    expect(result.status.officialCpcbAvailable).toBe(false);
+    expect(result.status.camsForecastAvailable).toBe(false);
+    expect(result.status.notice?.en).toContain('Air quality telemetry is temporarily unavailable');
+    expect(result.status.notice?.hi).toContain('वायु गुणवत्ता डेटा अस्थायी रूप से अनुपलब्ध है');
+  });
+
   it('provides demonstration mode with realistic telemetry when forceMock is active', async () => {
     const result = await getUnifiedAqi('delhi', { useMockFallback: true });
     expect(result.current.dataSource).toBe('mock_demonstration');

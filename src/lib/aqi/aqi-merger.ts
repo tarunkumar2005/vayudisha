@@ -15,7 +15,7 @@ import { fetchCpcbData, fetchCpcbStationsForCity, type StationReading } from './
 import { fetchCamsForecast, getMockCamsForecast, type CamsForecastResult } from './open-meteo-client';
 import { calculateOverallAQI, type AqiResult } from './aqi-calculator';
 import { getCityById, type CityInfo } from '../constants/cities';
-import { MOCK_DELHI_SMOG_CPCB_RESPONSE } from '../../../tests/fixtures/cpcb-sample';
+import { MOCK_DELHI_SMOG_CPCB_RESPONSE } from '@/lib/fixtures/cpcb-sample';
 
 export type DataSourceType =
   | 'cpcb_official'
