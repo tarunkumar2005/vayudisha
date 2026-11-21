@@ -83,7 +83,7 @@ VayuDisha introduces an original, approachable brand identity inspired by modern
 
 ```bash
 # Clone the repository
-git clone https://github.com/promptwars/vayudisha.git
+git clone https://github.com/tarunkumar2005/vayudisha.git
 cd vayudisha
 
 # Install clean dependencies
