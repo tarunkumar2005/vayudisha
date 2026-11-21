@@ -12,8 +12,11 @@
 [![WCAG 2.2 AA](https://img.shields.io/badge/axe--core-0%20Violations%20(AA)-brightgreen?style=flat)](https://www.deque.com/axe/)
 [![Gemini API](https://img.shields.io/badge/Google%20Gemini-3.5--flash--lite%20%2F%203.1--flash--lite-4285F4?style=flat&logo=google)](https://aistudio.google.com/)
 [![Repository Size](https://img.shields.io/badge/Repo%20Size-<1MB%20(768%20KiB)-success?style=flat)](https://github.com/)
+[![Live Production](https://img.shields.io/badge/Production%20Deployment-vayudisha.vercel.app-success?style=flat&logo=vercel)](https://vayudisha.vercel.app/)
 
 **PromptWars Virtual Challenge 06: Urban Air Quality Assistant**  
+**Live Production URL:** [https://vayudisha.vercel.app/](https://vayudisha.vercel.app/)  
+**GitHub Repository:** [https://github.com/tarunkumar2005/vayudisha](https://github.com/tarunkumar2005/vayudisha)  
 **Submission Deadline:** November 29, 2026, 11:59 PM IST
 
 ---

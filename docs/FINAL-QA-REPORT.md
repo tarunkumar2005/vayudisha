@@ -3,9 +3,12 @@
 **Date of Audit:** November 20, 2026  
 **Auditor:** Independent Principal Software Quality Auditor, Application Security Engineer & Environmental Data Systems Specialist  
 **Evaluated Product:** VayuDisha (वायुदिशा) v0.1.0  
-**Current Branch:** `redesign` (Reserve branch: `main` untouched)  
-**Tracked Git Object Size:** 768 KiB (Strictly compliant with $< 10\text{ MB}$ competition ceiling)  
-**Verification Verdict:** **PASS (RELEASE CANDIDATE READY)**
+**Current Branch:** `main` (Merged from `redesign` via PR #1)  
+**GitHub Repository:** [https://github.com/tarunkumar2005/vayudisha](https://github.com/tarunkumar2005/vayudisha)  
+**Pull Request #1:** [https://github.com/tarunkumar2005/vayudisha/pull/1](https://github.com/tarunkumar2005/vayudisha/pull/1)  
+**Live Production URL:** [https://vayudisha.vercel.app/](https://vayudisha.vercel.app/)  
+**Tracked Git Object Size:** 1.25 MiB (Strictly compliant with $< 10\text{ MB}$ competition ceiling)  
+**Verification Verdict:** **PASS (PRODUCTION DEPLOYED & VERIFIED)**
 
 ---
 
