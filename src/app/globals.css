@@ -3,14 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #F6F4EB;
+  --foreground: #174B36;
+  --card-bg: #FFFFFF;
+  --card-border: #E2DDD1;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background-color: var(--background);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom smooth scroll and focus rings */
+html {
+  scroll-behavior: smooth;
+}
+
+:focus-visible {
+  outline: 2px solid #159C89;
+  outline-offset: 2px;
+}
+
+/* Soft elevation utility inspired by modern environmental interfaces */
+.shadow-soft {
+  box-shadow: 0 4px 20px -2px rgba(23, 75, 54, 0.05), 0 2px 6px -1px rgba(23, 75, 54, 0.03);
+}
+
+.shadow-soft-lg {
+  box-shadow: 0 10px 30px -4px rgba(23, 75, 54, 0.08), 0 4px 12px -2px rgba(23, 75, 54, 0.04);
 }
 
 /* Print Optimization for Community Action Plan */
@@ -44,7 +66,7 @@ body {
   }
 }
 
-/* Respect prefers-reduced-motion — WCAG 2.3.3 (AAA guideline, good practice for AA) */
+/* Respect prefers-reduced-motion — WCAG 2.3.3 */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

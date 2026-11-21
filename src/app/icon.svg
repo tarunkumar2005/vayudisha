@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" width="32" height="32">
+  <defs>
+    <linearGradient id="favLeaf" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#174B36" />
+      <stop offset="100%" stop-color="#159C89" />
+    </linearGradient>
+    <linearGradient id="favSaffron" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E07A18" />
+      <stop offset="100%" stop-color="#EBA347" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded shield for high visibility on light or dark browser tabs -->
+  <rect width="32" height="32" rx="7" fill="#174B36" />
+
+  <!-- Flowing wind curve -->
+  <path d="M 4 22 C 10 22, 14 26, 20 23 C 25 20, 27 15, 29 10" 
+        stroke="#A7C5A0" stroke-width="1.8" stroke-linecap="round" opacity="0.6" />
+
+  <!-- Botanical Leaf Body -->
+  <path d="M 9 23 C 7 16, 13 8, 25 5 C 25 14, 19 24, 9 23 Z" 
+        fill="#159C89" />
+
+  <!-- Leaf Vein -->
+  <path d="M 10 22 C 15 17, 20 12, 24 6" 
+        stroke="#F6F4EB" stroke-width="1.2" stroke-linecap="round" opacity="0.9" />
+
+  <!-- Directional Saffron Arrowhead (Disha) -->
+  <path d="M 17 15 L 26 5 L 22 13 L 19 14 Z" 
+        fill="url(#favSaffron)" />
+  <circle cx="26" cy="5" r="1.5" fill="#EBA347" />
+</svg>

@@ -7,7 +7,10 @@ test.describe('Language switching', () => {
   test.beforeEach(async ({ page }) => {
     // Clear localStorage to ensure English default
     await page.goto('/');
-    await page.evaluate(() => localStorage.removeItem('saanssaathi_lang'));
+    await page.evaluate(() => {
+      localStorage.removeItem('vayudisha_lang');
+      localStorage.removeItem('saanssaathi_lang');
+    });
     await page.reload();
     await page.waitForLoadState('domcontentloaded');
   });

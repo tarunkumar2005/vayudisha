@@ -65,6 +65,7 @@ export interface AqiResult {
   /** Provenance tracking */
   isOfficialSuppliedAqi: boolean;
   isDerivedEstimate: boolean;
+  regulatoryCompletenessEnforced: boolean;
   methodologyNote: string;
 }
 
@@ -241,6 +242,7 @@ export function calculateOverallAQI(
       meetsMinimumData,
       isOfficialSuppliedAqi: true,
       isDerivedEstimate: false,
+      regulatoryCompletenessEnforced: true,
       methodologyNote:
         'Official CPCB station AQI directly supplied in CPCB data bulletin/telemetry feed.',
     };
@@ -257,7 +259,8 @@ export function calculateOverallAQI(
       meetsMinimumData,
       isOfficialSuppliedAqi: false,
       isDerivedEstimate: false,
-      methodologyNote: `Data Insufficient under CPCB methodology: requires at least 3 valid pollutants including at least one PM pollutant (PM2.5 or PM10) with >=16h valid monitoring. Available: ${subIndices.length} valid pollutants, hasPM: ${hasPM}.`,
+      regulatoryCompletenessEnforced: false,
+      methodologyNote: `Data Insufficient under CPCB methodology: requires at least 3 valid pollutants including at least one PM pollutant (PM2.5 or PM10) with valid monitoring records. Available: ${subIndices.length} valid pollutants, hasPM: ${hasPM}.`,
     };
   }
 
@@ -274,7 +277,8 @@ export function calculateOverallAQI(
     meetsMinimumData: true,
     isOfficialSuppliedAqi: false,
     isDerivedEstimate: true,
-    methodologyNote: `Derived CPCB Sub-Index Estimate: calculated as maximum sub-index across ${subIndices.length} eligible pollutants with valid regulatory averaging. Prominent pollutant: ${subIndices[0].pollutantId}.`,
+    regulatoryCompletenessEnforced: false,
+    methodologyNote: `Derived CPCB sub-index estimate (prominent: ${subIndices[0].pollutantId}). Regulatory 16-hour/6-hour monitoring completeness criteria cannot be independently verified from public hourly API feeds; calculated from available instantaneous/hourly records.`,
   };
 }
 

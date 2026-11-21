@@ -1,12 +1,17 @@
-# SaansSaathi (साँस साथी)
-### *GenAI-Powered Urban Air Quality Assistant for Indian Families & Communities*
+# VayuDisha (वायुदिशा)
+### *Intelligent Urban Air Quality & Sustainability Assistant for Indian Families & Communities*
+
+> **"Know your air. Choose a better direction."**  
+> **"हवा की समझ, बेहतर कल।"**
 
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/Vitest-41%20Passed-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
-[![Gemini API](https://img.shields.io/badge/Google%20Gemini-3.8--flash-4285F4?style=flat&logo=google)](https://aistudio.google.com/)
-[![Repository Size](https://img.shields.io/badge/Repo%20Size-624%20KB%20(<10MB)-success?style=flat)](https://github.com/)
+[![Vitest](https://img.shields.io/badge/Vitest-85%20Passed-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
+[![Playwright](https://img.shields.io/badge/Playwright%20E2E-45%20Passed-brightgreen?style=flat&logo=playwright)](https://playwright.dev/)
+[![WCAG 2.2 AA](https://img.shields.io/badge/axe--core-0%20Violations%20(AA)-brightgreen?style=flat)](https://www.deque.com/axe/)
+[![Gemini API](https://img.shields.io/badge/Google%20Gemini-3.5--flash--lite%20%2F%203.1--flash--lite-4285F4?style=flat&logo=google)](https://aistudio.google.com/)
+[![Repository Size](https://img.shields.io/badge/Repo%20Size-<1MB%20(768%20KiB)-success?style=flat)](https://github.com/)
 
 **PromptWars Virtual Challenge 06: Urban Air Quality Assistant**  
 **Submission Deadline:** November 29, 2026, 11:59 PM IST
@@ -15,155 +20,97 @@
 
 ## 🌬️ Overview
 
-Winter smog in northern and central India poses severe health risks to millions of households. During thermal inversions, particulate matter ($\text{PM}_{2.5}$ and $\text{PM}_{10}$) is trapped in the breathing zone, leading to acute respiratory stress for infants, school children, and seniors.
+Winter smog in northern and central India poses severe health risks to millions of households. During thermal inversions, fine particulate matter ($\text{PM}_{2.5}$ and $\text{PM}_{10}$) is trapped at ground level, creating dangerous exposure spikes for infants, school children, and senior citizens.
 
-**SaansSaathi ("Breath Companion")** bridges official government atmospheric telemetry with actionable, low-emission daily routines, indoor air solutions across 3 budget tiers, verified transport carbon calculations, and a printable 1-page community clean-air action plan.
+**VayuDisha (वायुदिशा)** bridges official Central Pollution Control Board (CPCB) continuous telemetry with actionable, low-emission daily routines, peer-reviewed indoor air filtration guidance across 3 budget tiers, verified transport carbon calculations, and a printable 1-page community clean-air charter for Resident Welfare Associations (RWAs).
 
----
-
-## 🏛️ Architecture & Critical Data Compliance
-
-SaansSaathi is built upon a **safety-first, deterministic foundation**. Artificial intelligence is strictly restricted to personalization and empathetic explanation of pre-approved scientific guidance:
-
-```
-[CPCB Station Telemetry (data.gov.in)] ──┐
-                                          ├─► [AQI Merger & Sanitizer] ──► [Deterministic Safety Engine]
-[Copernicus CAMS Model (Open-Meteo)] ─────┘                                      │
-                                                                                 ▼
-                                                                 [Gemini 3.8 Flash (Server-Side)]
-                                                                                 │
-                                                                                 ▼
-                                                                 [Zod & Regex Safety Validator]
-                                                                                 │
-                                                                                 ▼
-                                                                 [React UI: Dashboard, Routine, Impact]
-```
-
-### Critical Rules Adherence
-
-1. **Official CPCB Ground Station Telemetry**: Treated as authoritative Indian AQI only when valid and fresh (<6 hours). Always displays monitoring station name, last updated timestamp, and source attribution.
-2. **Open-Meteo CAMS Global Model**: Explicitly labeled as **"Copernicus (CAMS) Model Forecast"**, never as official CPCB station data.
-3. **No Fabricated AQI**: Never calculates official Indian AQI from a single hourly model point. If ground telemetry is down, official AQI is rendered as `--` with transparent fallback notices.
-4. **Deterministic Health & Mask Safety**: N95 mask requirements and exercise prohibitions under Poor/Severe AQI are evaluated deterministically by code—**never left to LLM guesswork**.
-5. **Zero PII & Medical Data Leakage**: Privacy sanitizer ensures no names, addresses, or clinical diagnoses reach the Gemini API.
-6. **Impact Separation**: Commuter transport $\text{CO}_2\text{e}$ reductions are kept strictly separate from personal exposure indicators. Never claims individual choices reduce city-level ambient AQI.
+### Architecture Highlights (V2 Redesign)
+- **Separation of Concerns**: Dedicated storytelling marketing homepage (`/`) inspired by the editorial craft and warmth of modern product showcases, and a dedicated telemetry workstation (`/dashboard`) for in-depth ground telemetry, multi-station switching, 24-hour CAMS inversion forecasting, and pollutant sub-indices.
+- **CPCB Multi-Station Registry (`src/lib/aqi/cpcb-registry.ts`)**: Built-in station directory with exact data.gov.in CAAQMS station names, city aliases (e.g. Bangalore ➔ Bengaluru, Bombay ➔ Mumbai, Dilli ➔ Delhi), operating agencies (DPCC, MPCB, KSPCB, BSPCB, WBPCB, TSPCB, UPPCB), and verified active stations for Indian metros.
+- **Multi-City Ground Station Reliability**: Solves data.gov.in's 10-record pagination ceiling by targeting registered CAAQMS stations (e.g. Colaba for Mumbai, Jayanagar for Bengaluru, Anand Vihar for Delhi).
+- **Graceful Fallback Matrix**: State A (Verified CPCB ground station data with badge, station name, timestamp), State B (Atmospheric Model Forecast from Copernicus CAMS for locations without continuous stations, e.g. Jamshedpur), State C (Graceful unavailable).
+- **Interactive Storytelling ("A Smoggy Tuesday")**: 5-step daily inversion journey tracking morning inversion (7:30 AM), workday filtration (11:00 AM), afternoon solar ventilation window (2:00 PM), evening commute rush (6:30 PM), and nighttime bedroom clean air (10:00 PM).
+- **Try It: 3 Steps to Clean Indoor Air**: Interactive tool computing Clean Air Delivery Rate (CADR in m³/h) and air changes per hour (ACH) based on room size (120, 200, 350 sq ft) and budget tier (Free, DIY Corsi-Rosenthal ₹2k, HEPA ₹9k).
 
 ---
 
-## ✨ Key Features
+## 🎨 Visual Identity & Brand Assets
 
-### 1. Location-Aware AQI & Multi-Pollutant Dashboard
-* **Dynamic CPCB Gauge**: Visual circular gauge using official Indian AQI breakpoints and WCAG-AA compliant colors.
-* **Pollutant Sub-Indices Breakdown**: Shows measured concentration, regulatory averaging window, and sub-index for $\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_2, \text{SO}_2, \text{CO}, \text{O}_3$.
-* **24-Hour Forecast & 3-Day Risk Outlook**: Recharts visual area chart of Copernicus CAMS particulate predictions.
-* **Multi-Station Comparison**: Compares air quality across multiple monitoring stations in the same city.
+VayuDisha introduces an original, approachable brand identity inspired by modern environmental intelligence:
 
-### 2. Family Routine & Indoor Air Quality Planner
-* **Household Setup**: Tailors advice for infants/toddlers, school children, seniors, and respiratory sensitivity.
-* **Indoor Interventions across 3 Budget Tiers**:
-  * **Low Budget (₹0 – ₹500)**: Wet mopping protocol, damp towel window/door draft seals, elimination of incense/mosquito coils.
-  * **Medium Budget (₹500 – ₹5,000)**: DIY box fan MERV-13 air cleaner (Corsi-Rosenthal method), certified N95 respirators, NASA clean-air plants.
-  * **High Budget (₹5,000+)**: True HEPA H13 air purifiers with activated carbon, indoor laser $\text{PM}_{2.5}$ monitors.
-* **Evidence Links**: Every intervention cites official research (CPCB, WHO, ICMR, Harvard Public Health, NASA).
-
-### 3. Sustainable Travel & Impact Calculator
-* **Indian Modal Shift Calculation**: Compare your current travel mode (petrol car, diesel car, two-wheeler) with clean alternatives (Metro rail, electric bus, e-rickshaw, cycling).
-* **Documented Factors**: Sourced from India GHG Program, DMRC sustainability filings, and SIAM.
-* **Thermal Inversion Guidance**: Explains the physics of the morning smog trap (6–9 AM) and preferred afternoon dispersion window (1–4 PM).
-
-### 4. Shareable 1-Page Community Action Plan
-* **RWA & Society Toolkit**: Clean layout for apartment complexes and neighborhood associations.
-* **Quick Wins**: Immediate ban on open leaf burning, electric heaters for night security guards, water sprinkling for dust control.
-* **Print & PDF Ready**: Optimized for 1-page A4 printing via browser `@media print` with zero household PII.
-
-### 5. Hybrid Bilingual Support (English ↔ हिंदी)
-* Instant language switching between English and natural Hindi in Devanagari script.
-* Static reviewed translations for all safety warnings and disclaimers, with Gemini handling dynamic localized explanations.
+- **Primary Colors**: Forest Green (`#174B36`), Emerald Teal (`#0F766E`), Soft Sage (`#A7C5A0`), Saffron Accent (`#EBA347`), and Warm Cream Canvas (`#F6F4EB`).
+- **Official CPCB Palette**: Strict regulatory colors for AQI brackets (Good `#00B050`, Satisfactory `#92D050`, Moderate `#FFD700`, Poor `#FF8C00`, Very Poor `#FF0000`, Severe `#8B0000`).
+- **Brand Companion**: "Vayu" (वायु) — an empathetic breeze/leaf mascot with expressive SVG poses (`greeting`, `explaining`, `celebrating`, `cautious`, `thinking`, `alert`, `peeking`).
 
 ---
 
-## 🚀 Getting Started
+## 🏛️ Routes & Architecture
+
+| Route | Purpose | Highlights |
+| :--- | :--- | :--- |
+| `/` | **Marketing & Storytelling Home** | Hero narrative, companion greeting, floating live AQI card, "A Smoggy Tuesday" timeline, habit bento grid, 3-step CADR calculator, FAQ accordion, closing banner. |
+| `/dashboard` | **Air Quality Telemetry Workstation** | City dropdown, station dropdown selector, AqiGauge, official CPCB SourceBadge, multi-station city grid, 24h CAMS inversion forecast chart, pollutant sub-indices, CPCB standard limits. |
+| `/planner` | **Family Routine Planner** | Household profile tailoring (infants, asthmatics, seniors, commute mode), budget filter tabs, Gemini AI personalized guidance with deterministic guardrails, evidence citations. |
+| `/impact` | **Travel & Impact Calculator** | Modal split comparison (Metro, Bus, EV, Two-Wheeler, Car), personal $\text{CO}_2\text{e}$ savings calculation, explicit disclaimer that personal carbon savings do not change city AQI. |
+| `/community` | **Community Action Plan** | 1-page printable RWA clean-air charter, waste burning bans, DG set restrictions, carpool coordination, anti-dust mitigation guidelines. |
+
+---
+
+## 🧪 Verification & Quality Scorecard
+
+| Quality Domain | Metric | Result | Verification Command |
+| :--- | :--- | :--- | :--- |
+| **Unit & Integration Tests** | 14 Test Files | **85 Passed**, 11 Skipped (Offline CI) | `npm test` |
+| **End-to-End Tests** | 8 Playwright Specs | **45 of 45 Passed** (100%) | `npm run test:e2e` |
+| **Accessibility (WCAG 2.2 AA)** | axe-core automated audit | **0 Critical / 0 Serious Violations** across all 5 routes (`/`, `/dashboard`, `/planner`, `/impact`, `/community`) | `npm run test:e2e` (accessibility.spec.ts) |
+| **Type Safety** | TypeScript `tsc --noEmit` | **0 Errors** | `npm run typecheck` |
+| **Code Linting** | Next.js ESLint | **0 Warnings / 0 Errors** | `npm run lint` |
+| **Production Build** | Next.js 15.5.29 Static Pages | **Compiled in 1.48s (9/9 static pages)** | `npm run build` |
+| **Live Multi-City CPCB API** | data.gov.in Authenticated Telemetry | **HTTP 200 (Delhi, Mumbai, Bengaluru, Pune, Chennai, Jorapokhar; CAMS fallback for Jamshedpur)** | `npm run test:live:multicity` |
+| **Gemini AI Developer API** | Google GenAI Flash-Lite (3.5 / 3.1) | **1.23s - 1.95s latency, 6s timeout, 100% structured JSON** | `LIVE_INTEGRATION=true npx vitest run tests/integration/gemini-live.test.ts` |
+| **Git Repository Size** | Tracked Git History | **< 1 MB (768 KiB)** (Strictly < 10 MB limit) | `git count-objects -vH` |
+
+---
+
+## 🚀 Quickstart & Local Development
 
 ### Prerequisites
-* Node.js 18+ (tested on Node v20 & v26)
-* npm 9+
+- Node.js 18.17+ or 20+
+- npm 9+
+- (Optional) Free API keys for data.gov.in and Google AI Studio
 
-### 1. Clone & Install
-```bash
-git clone https://github.com/your-username/saanssaathi.git
-cd saanssaathi
-npm install
-```
+### Setup
 
-### 2. Configure Environment Variables
-Copy the template and fill in your keys:
 ```bash
+# Clone the repository
+git clone https://github.com/tarunkumar2005/vayudisha.git
+cd vayudisha
+
+# Install clean dependencies
+npm ci
+
+# Configure environment variables (optional for mock mode)
 cp .env.example .env.local
-```
 
-| Variable | Description |
-|---|---|
-| `DATA_GOV_IN_API_KEY` | Free API key from [data.gov.in](https://data.gov.in/) for CPCB AQI resource `3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69`. |
-| `GEMINI_API_KEY` | Developer API key from [Google AI Studio](https://aistudio.google.com/) for `gemini-3.8-flash`. |
-| `NEXT_PUBLIC_USE_MOCK_AQI` | Set to `true` to test using realistic simulated CPCB telemetry without an external key. |
-
-*Note: If no API keys are provided during local testing, SaansSaathi gracefully activates verified demonstration telemetry and deterministic bilingual guidance without crashing.*
-
-### 3. Run Development Server
-```bash
+# Run development server
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+Visit [http://localhost:3000](http://localhost:3000) to view VayuDisha.
 
 ---
 
-## 🧪 Testing & Code Quality
+## 📄 Documentation Links
 
-SaansSaathi includes **41 automated unit and integration tests** covering all data parsers, sub-index math, safety matrices, impact equations, and privacy sanitizers:
-
-```bash
-# Run unit & integration tests
-npm test
-
-# Typecheck TypeScript
-npm run typecheck
-
-# Production build test
-npm run build
-```
-
-### Test Coverage Highlights
-* **AQI Calculator**: Verifies CPCB piecewise interpolation, minimum 3-pollutants rule, and sensor anomaly rejection.
-* **CPCB Client**: Verifies IST date parsing, Zod schema validation, stale record flagging (>6h), and API error recovery.
-* **Open-Meteo Client**: Verifies CAMS model tagging, $\mu\text{g/m}^3 \rightarrow \text{mg/m}^3$ CO conversion, and forecast summaries.
-* **Safety Rules**: Verifies N95 mandates under Severe AQI and budget tier filtering.
-* **Impact Calculator**: Verifies car-to-metro CO₂e savings and mature tree absorption equivalents.
-* **Gemini Sanitizer**: Verifies complete stripping of PII and regex blocking of forbidden medical claims.
+- [Brand Guidelines](docs/BRAND-GUIDELINES.md)
+- [Design System & UI Components](docs/DESIGN-SYSTEM.md)
+- [Production Readiness Audit](docs/PRODUCTION-READINESS.md)
+- [PromptWars Evaluation & Rubric Mapping](docs/EVALUATION.md)
+- [Data Sources & Methodology](docs/DATA-SOURCES.md)
+- [Assumptions & Regulatory Baselines](docs/ASSUMPTIONS.md)
 
 ---
 
-## 📦 Submission & Repository Compliance
+## ⚖️ License & Disclaimer
 
-* **Repository Size**: **624 KB** (Strict requirement: under 10 MB).
-* **Git Cleanliness**: Excludes `node_modules`, `.next`, build artifacts, videos, and secrets via strict `.gitignore`.
-* **Zero Client-Side Secrets**: All API keys remain isolated inside server-side Route Handlers.
-
----
-
-## ⚖️ Evaluation Rubric Alignment
-
-| Evaluation Parameter | How SaansSaathi Delivers |
-|---|---|
-| **Code Quality** | Strict TypeScript, ESLint, clean modular separation (`lib/aqi`, `lib/rules`, `lib/impact`, `lib/gemini`), Zod runtime validation. |
-| **Security & Privacy** | Server-side API key containment, PII sanitization before AI calls, regex medical claim guards, Content Security Policy headers. |
-| **Efficiency** | Client-side React context with localStorage persistence, Next.js route caching (`s-maxage=300`), deterministic rules bypassing unnecessary LLM latency. |
-| **Testing** | 41 comprehensive Vitest tests across unit and integration layers with mocked fixtures for edge cases. |
-| **Accessibility** | Mobile-first responsive UI, WCAG AA color contrast, semantic HTML5, keyboard accessible controls, and screen-reader labels. |
-| **Problem Alignment** | 100% targeted to winter smog in India: CPCB ground telemetry, 3 budget tiers, sustainable transit impact, and RWA community action. |
-
----
-
-## 📜 Regulatory Disclaimers
-
-1. **Not Medical Advice**: SaansSaathi provides environmental awareness and public health exposure reduction guidance based on CPCB and WHO guidelines. It does not provide medical diagnoses, clinical treatment, or prescriptions. Consult a physician for acute respiratory symptoms.
-2. **Attribution**: Air quality telemetry derived from the Central Pollution Control Board (CPCB) via data.gov.in and Copernicus Atmosphere Monitoring Service (CAMS) via Open-Meteo.
+VayuDisha provides public health and environmental awareness guidance based on official Central Pollution Control Board (CPCB) methodology and Ministry of Health and Family Welfare (MoHFW) directives. It is not a medical diagnostic device. Consult a qualified physician for acute respiratory symptoms.

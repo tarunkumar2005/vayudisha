@@ -67,7 +67,7 @@ test.describe('API fallback behaviour', () => {
       });
     });
 
-    await page.goto('/');
+    await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
     // The gauge should show '--' for null AQI
@@ -97,7 +97,7 @@ test.describe('API fallback behaviour', () => {
       route.fulfill({ status: 200, body: JSON.stringify(camsPayload), headers: { 'Content-Type': 'application/json' } });
     });
 
-    await page.goto('/');
+    await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
     const notice = page.locator('text=/unavailable|Status Notice/i').first();

@@ -96,19 +96,115 @@ export interface RecommendationTemplate {
 }
 
 /**
+ * Internal source-neutral advisory severity scale.
+ * Keeps CAMS atmospheric model risk classifications cleanly separated from official CPCB AQI categories.
+ */
+export type AdvisorySeverityLevel =
+  | 'MINIMAL' // Corresponds to Good (CPCB) / Minimal Model Risk
+  | 'LOW' // Corresponds to Satisfactory (CPCB) / Low Model Risk
+  | 'MODERATE' // Corresponds to Moderate (CPCB) / Moderate Risk (CAMS)
+  | 'HIGH' // Corresponds to Poor (CPCB) / High Risk (CAMS)
+  | 'VERY_HIGH' // Corresponds to Very Poor (CPCB) / Very High Risk (CAMS)
+  | 'SEVERE'; // Corresponds to Severe (CPCB) / Severe Risk (CAMS)
+
+export function mapCategoryToAdvisorySeverity(
+  rawCategory: string | null | undefined
+): AdvisorySeverityLevel {
+  if (!rawCategory) return 'MODERATE';
+  const normalized = rawCategory.trim().toLowerCase();
+
+  if (
+    normalized === 'good' ||
+    normalized.includes('good') ||
+    normalized.includes('अच्छा') ||
+    normalized.includes('अच्छी')
+  ) {
+    return 'MINIMAL';
+  }
+  if (
+    normalized === 'satisfactory' ||
+    normalized.includes('satisfactory') ||
+    normalized.includes('संतोषजनक')
+  ) {
+    return 'LOW';
+  }
+  if (
+    normalized === 'moderate' ||
+    normalized === 'moderate risk' ||
+    normalized.includes('moderate') ||
+    normalized.includes('मध्यम')
+  ) {
+    return 'MODERATE';
+  }
+  if (
+    normalized === 'severe' ||
+    normalized === 'severe risk' ||
+    normalized.includes('severe') ||
+    normalized.includes('गंभीर')
+  ) {
+    return 'SEVERE';
+  }
+  if (
+    normalized === 'very poor' ||
+    normalized === 'very high risk' ||
+    normalized.includes('very high risk') ||
+    normalized.includes('बहुत खराब')
+  ) {
+    return 'VERY_HIGH';
+  }
+  if (
+    normalized === 'poor' ||
+    normalized === 'high risk' ||
+    normalized.includes('high risk') ||
+    normalized.includes('खराब')
+  ) {
+    return 'HIGH';
+  }
+
+  // Fail closed
+  return 'HIGH';
+}
+
+/**
+ * Adapter returning canonical CPCB category for legacy recommendation filtering and API consumers,
+ * preserving existing recommendation behaviour while mapping through the source-neutral severity scale.
+ */
+export function mapModelCategoryToCanonicalAqiCategory(
+  rawCategory: string | null | undefined
+): AqiCategory {
+  const severity = mapCategoryToAdvisorySeverity(rawCategory);
+  switch (severity) {
+    case 'MINIMAL':
+      return 'Good';
+    case 'LOW':
+      return 'Satisfactory';
+    case 'MODERATE':
+      return 'Moderate';
+    case 'HIGH':
+      return 'Poor';
+    case 'VERY_HIGH':
+      return 'Very Poor';
+    case 'SEVERE':
+      return 'Severe';
+  }
+}
+
+/**
  * Deterministically evaluate outdoor activity and conditional respirator guidance.
  * Aligned with MoHFW/NCDC October 2025 Air Pollution Health Advisory.
  */
 export function evaluateActivitySafety(
-  category: AqiCategory,
+  category: AqiCategory | string,
   profile: DemographicProfile
 ): ActivityGuidance {
+  const canonical = mapModelCategoryToCanonicalAqiCategory(category);
   const isHighRiskHousehold =
     profile.hasInfantsOrToddlers ||
+    profile.hasSchoolChildren ||
     profile.hasSeniors ||
     profile.hasSensitiveMembers;
 
-  switch (category) {
+  switch (canonical) {
     case 'Good':
       return {
         level: 'SAFE',
@@ -342,6 +438,10 @@ export function evaluateActivitySafety(
           hi: 'जहरीली हवा स्वस्थ लोगों को भी नुकसान पहुंचाती है। दरवाजे-खिड़कियां बंद रखें और धूल रोकने के लिए गीला पोंछा लगाएं।',
         },
       };
+
+    default:
+      // Fail closed: treat unknown/unrecognized category with safe high caution
+      return evaluateActivitySafety('Poor', profile);
   }
 }
 
@@ -677,7 +777,7 @@ export const RECOMMENDATION_CATALOG: RecommendationTemplate[] = [
  * household demographics, and budget preferences.
  */
 export function getEligibleRecommendations(
-  category: AqiCategory,
+  category: AqiCategory | string,
   profile: DemographicProfile
 ): RecommendationTemplate[] {
   const categoryOrder: Record<AqiCategory, number> = {
@@ -689,7 +789,8 @@ export function getEligibleRecommendations(
     Severe: 5,
   };
 
-  const currentLevel = categoryOrder[category];
+  const canonicalCategory = mapModelCategoryToCanonicalAqiCategory(category);
+  const currentLevel = categoryOrder[canonicalCategory] ?? categoryOrder['Moderate'];
 
   return RECOMMENDATION_CATALOG.filter((rec) => {
     // 1. Must meet the minimum AQI threshold for that intervention

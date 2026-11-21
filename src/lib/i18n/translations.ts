@@ -2,12 +2,16 @@ export type Language = 'en' | 'hi';
 
 export const UI_STRINGS = {
   appName: {
-    en: 'SaansSaathi',
-    hi: 'साँस साथी',
+    en: 'VayuDisha',
+    hi: 'वायुदिशा',
   },
   tagline: {
-    en: 'Urban Air Quality Assistant for Indian Families & Communities',
-    hi: 'भारतीय परिवारों और समुदायों के लिए वायु गुणवत्ता साथी',
+    en: 'Know your air. Choose a better direction.',
+    hi: 'हवा की समझ, बेहतर कल।',
+  },
+  productDescription: {
+    en: 'An intelligent air-quality and sustainability assistant helping Indian families understand local air conditions, reduce pollution exposure, and adopt sustainable lifestyles.',
+    hi: 'एक बुद्धिमान वायु-गुणवत्ता और स्थिरता सहायक जो भारतीय परिवारों को स्थानीय वायु स्थितियों को समझने, प्रदूषण से बचने और टिकाऊ जीवन शैली अपनाने में मदद करता है।',
   },
   nav: {
     dashboard: { en: 'Air Quality', hi: 'वायु गुणवत्ता' },
@@ -54,8 +58,8 @@ export const UI_STRINGS = {
   },
   footer: {
     disclaimer: {
-      en: 'SaansSaathi provides public health and environmental awareness guidance based on official CPCB benchmarks. Not a medical diagnosis device. Consult a physician for acute respiratory distress.',
-      hi: 'साँस साथी सीपीसीबी मानकों के आधार पर जनस्वास्थ्य जागरूकता प्रदान करता है। यह चिकित्सीय उपकरण नहीं है। आपातकालीन स्थिति में डॉक्टर से संपर्क करें।',
+      en: 'VayuDisha provides public health and environmental awareness guidance based on official CPCB benchmarks. Not a medical diagnosis device. Consult a physician for acute respiratory distress.',
+      hi: 'वायुदिशा सीपीसीबी मानकों के आधार पर जनस्वास्थ्य जागरूकता प्रदान करता है। यह चिकित्सीय उपकरण नहीं है। आपातकालीन स्थिति में डॉक्टर से संपर्क करें।',
     },
     attribution: {
       en: 'Built with Next.js, Gemini API, CPCB/OGD data, and Open-Meteo CAMS for PromptWars 2026.',

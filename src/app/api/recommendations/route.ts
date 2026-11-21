@@ -9,7 +9,9 @@ import { getUnifiedAqi } from '@/lib/aqi/aqi-merger';
 import {
   evaluateActivitySafety,
   getEligibleRecommendations,
+  mapModelCategoryToCanonicalAqiCategory,
 } from '@/lib/rules/safety-rules';
+import { getCityById } from '@/lib/constants/cities';
 import { type AqiCategory } from '@/lib/aqi/aqi-breakpoints';
 import { sanitizeProfileForAi } from '@/lib/gemini/sanitizer';
 import { generatePersonalizedGuidance } from '@/lib/gemini/client';
@@ -76,19 +78,30 @@ export async function POST(request: NextRequest) {
 
     const { cityName, language, profile } = parsed.data;
 
-    // 1. Fetch official authoritative air quality data
-    const aqiData = await getUnifiedAqi(cityName);
-    const category = (aqiData.current.category as AqiCategory) || 'Moderate';
+    // Validate city strictly against supported registry to prevent unknown city substitution (H-04)
+    // and prevent free-form PII/prompt injection leakage to Gemini (H-05).
+    const canonicalCity = getCityById(cityName);
+    if (!canonicalCity) {
+      return NextResponse.json(
+        { error: 'Invalid or unsupported city identifier. Please select a valid supported Indian city.' },
+        { status: 400, headers: { ...rlHeaders, 'Cache-Control': 'no-store' } }
+      );
+    }
+
+    // 1. Fetch official authoritative air quality data using canonical ID
+    const aqiData = await getUnifiedAqi(canonicalCity.id);
+    const category = mapModelCategoryToCanonicalAqiCategory(aqiData.current.category);
 
     // 2. Deterministic Safety & Activity Guidance
     const activitySafety = evaluateActivitySafety(category, profile);
 
     // 3. Deterministic Recommendation Selection
     const eligibleRecs = getEligibleRecommendations(category, profile);
+    const allTierRecs = getEligibleRecommendations(category, { ...profile, budgetTier: 'high' });
 
-    // 4. Privacy Sanitization for AI Personalization
+    // 4. Privacy Sanitization for AI Personalization (using canonical display name)
     const sanitizedContext = sanitizeProfileForAi(
-      cityName,
+      canonicalCity.name.en,
       category,
       profile,
       eligibleRecs.map((r) => ({
@@ -121,6 +134,19 @@ export async function POST(request: NextRequest) {
         activitySafety,
         personalization,
         eligibleRecommendations: eligibleRecs.map((r) => ({
+          id: r.id,
+          category: r.category,
+          budgetTier: r.budgetTier,
+          title: language === 'hi' ? r.title.hi : r.title.en,
+          summary: language === 'hi' ? r.summary.hi : r.summary.en,
+          actionSteps: language === 'hi' ? r.actionSteps.hi : r.actionSteps.en,
+          evidence: {
+            source: r.evidence.source,
+            url: r.evidence.url,
+            fact: language === 'hi' ? r.evidence.fact.hi : r.evidence.fact.en,
+          },
+        })),
+        allRecommendations: allTierRecs.map((r) => ({
           id: r.id,
           category: r.category,
           budgetTier: r.budgetTier,

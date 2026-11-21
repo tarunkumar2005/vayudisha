@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Location selection', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
   });
 

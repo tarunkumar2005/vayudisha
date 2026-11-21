@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   evaluateActivitySafety,
   getEligibleRecommendations,
+  mapCategoryToAdvisorySeverity,
+  mapModelCategoryToCanonicalAqiCategory,
   type DemographicProfile,
 } from '@/lib/rules/safety-rules';
 
@@ -135,5 +137,46 @@ describe('Deterministic Safety Rule Engine', () => {
       expect(rec.evidence.fact.en).toBeTruthy();
       expect(rec.evidence.fact.hi).toBeTruthy();
     }
+  });
+
+  describe('Source-Neutral Advisory Severity Adapter & CAMS Category Separation', () => {
+    it('correctly maps official CPCB AQI categories to source-neutral advisory severity levels', () => {
+      expect(mapCategoryToAdvisorySeverity('Good')).toBe('MINIMAL');
+      expect(mapCategoryToAdvisorySeverity('Satisfactory')).toBe('LOW');
+      expect(mapCategoryToAdvisorySeverity('Moderate')).toBe('MODERATE');
+      expect(mapCategoryToAdvisorySeverity('Poor')).toBe('HIGH');
+      expect(mapCategoryToAdvisorySeverity('Very Poor')).toBe('VERY_HIGH');
+      expect(mapCategoryToAdvisorySeverity('Severe')).toBe('SEVERE');
+    });
+
+    it('correctly maps CAMS atmospheric model risk strings without confusing them with official CPCB categories', () => {
+      expect(mapCategoryToAdvisorySeverity('Moderate Risk')).toBe('MODERATE');
+      expect(mapCategoryToAdvisorySeverity('High Risk')).toBe('HIGH');
+      expect(mapCategoryToAdvisorySeverity('Very High Risk')).toBe('VERY_HIGH');
+      expect(mapCategoryToAdvisorySeverity('Severe Risk')).toBe('SEVERE');
+
+      expect(mapModelCategoryToCanonicalAqiCategory('Moderate Risk')).toBe('Moderate');
+      expect(mapModelCategoryToCanonicalAqiCategory('High Risk')).toBe('Poor');
+      expect(mapModelCategoryToCanonicalAqiCategory('Very High Risk')).toBe('Very Poor');
+      expect(mapModelCategoryToCanonicalAqiCategory('Severe Risk')).toBe('Severe');
+    });
+
+    it('correctly parses Hindi risk strings and fails closed to HIGH / Poor on unknown inputs', () => {
+      expect(mapCategoryToAdvisorySeverity('गंभीर जोखिम (मॉडल अनुमान)')).toBe('SEVERE');
+      expect(mapCategoryToAdvisorySeverity('खराब जोखिम (मॉडल अनुमान)')).toBe('HIGH');
+      expect(mapCategoryToAdvisorySeverity('Unknown Category')).toBe('HIGH');
+      expect(mapCategoryToAdvisorySeverity(null)).toBe('MODERATE');
+      expect(mapModelCategoryToCanonicalAqiCategory('Unknown String')).toBe('Poor');
+    });
+
+    it('seamlessly evaluates activity safety and recommendations for CAMS model risk strings', () => {
+      const guidance = evaluateActivitySafety('High Risk', defaultProfile);
+      expect(guidance).toBeDefined();
+      expect(guidance.level).toBe('AVOID_PROLONGED_OUTDOORS');
+      expect(guidance.canExerciseOutdoors).toBe(false);
+
+      const recs = getEligibleRecommendations('High Risk', defaultProfile);
+      expect(recs.length).toBeGreaterThan(0);
+    });
   });
 });
