@@ -247,11 +247,14 @@ export async function fetchCpcbData(
             statusDetails: 'data.gov.in rate limit active (HTTP 429). Serving cached CPCB station readings.',
           };
         }
-        return makeErrorResult(
+        const rateLimitRes = makeErrorResult(
           errorMsg,
           'rate_limited',
           'Rate limit exceeded on data.gov.in endpoint (HTTP 429). The free government API tier limits rapid queries.'
         );
+        // Cache rate_limited response for 2 minutes to allow upstream gateway to cool down
+        cpcbMemoryCache.set(cacheKey, { data: rateLimitRes, cachedAt: now });
+        return rateLimitRes;
       }
 
       return makeErrorResult(

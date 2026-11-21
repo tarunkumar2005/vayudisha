@@ -176,6 +176,11 @@ export async function getUnifiedAqi(
 
         cpcbResult = res;
 
+        // If rate limited or unauthenticated, abort candidate loop immediately to avoid hammering upstream
+        if (res.apiStatus === 'rate_limited' || res.apiStatus === 'unauthorized_or_invalid_key') {
+          break;
+        }
+
         if (res.apiAvailable && res.stations.length > 0) {
           const firstSt = res.stations[0];
           if (firstSt && Object.keys(firstSt.pollutants).length >= 3) {
