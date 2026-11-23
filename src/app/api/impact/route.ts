@@ -12,9 +12,20 @@ export const dynamic = 'force-dynamic';
 // Impact calculator: 60 req/min (purely computational, no external API)
 const RATE_LIMIT = { limit: 60, windowMs: 60_000 };
 
+const VALID_TRANSPORT_MODES = [
+  'car_petrol',
+  'car_diesel',
+  'two_wheeler_petrol',
+  'auto_rickshaw_cng',
+  'bus_diesel',
+  'metro_rail',
+  'e_rickshaw',
+  'cycling_walking',
+] as const;
+
 const ImpactRequestSchema = z.object({
-  currentMode: z.string(),
-  alternativeMode: z.string(),
+  currentMode: z.enum(VALID_TRANSPORT_MODES),
+  alternativeMode: z.enum(VALID_TRANSPORT_MODES),
   oneWayDistanceKm: z.number().min(0.5).max(200).default(12),
   tripsPerWeek: z.number().min(1).max(28).default(10),
 });
@@ -23,7 +34,7 @@ const MAX_PAYLOAD_BYTES = 32 * 1024; // 32 KB payload limit
 
 export async function POST(request: NextRequest) {
   const contentLength = request.headers.get('content-length');
-  if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+  if (contentLength && Number.parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
     return NextResponse.json(
       { error: 'Payload too large. Maximum allowed size is 32 KB.' },
       { status: 413, headers: { 'Cache-Control': 'no-store' } }
@@ -54,8 +65,8 @@ export async function POST(request: NextRequest) {
     const { currentMode, alternativeMode, oneWayDistanceKm, tripsPerWeek } = parsed.data;
 
     const calculation = calculateModalShiftImpact({
-      currentMode: currentMode as keyof typeof INDIAN_TRANSPORT_EMISSION_FACTORS,
-      alternativeMode: alternativeMode as keyof typeof INDIAN_TRANSPORT_EMISSION_FACTORS,
+      currentMode,
+      alternativeMode,
       oneWayDistanceKm,
       tripsPerWeek,
     });

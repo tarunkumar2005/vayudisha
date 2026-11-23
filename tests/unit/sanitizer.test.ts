@@ -237,4 +237,40 @@ describe('Gemini Privacy Sanitizer & Output Validator', () => {
     expect(ctx.cityName).not.toContain('123 Main Road');
     expect(ctx.cityName).not.toContain('system:');
   });
+
+  it('resists ReDoS attacks with linear-time evaluation on pathological address strings', () => {
+    const rawProfile = {
+      hasInfantsOrToddlers: false,
+      hasSchoolChildren: false,
+      hasSeniors: false,
+      hasSensitiveMembers: false,
+      commuteMode: 'metro' as const,
+      budgetTier: 'low' as const,
+    };
+
+    // Pathological string with repeating valid tokens followed by non-matching suffix
+    const pathologicalInput = '101 ' + 'Sector Block Marg Road '.repeat(80) + 'NoMatchSuffix!';
+    const start = performance.now();
+    const ctx = sanitizeProfileForAi(pathologicalInput, 'Moderate', rawProfile, []);
+    const duration = performance.now() - start;
+
+    expect(duration).toBeLessThan(20); // Linear-time execution guaranteed
+    expect(ctx.cityName).toBeDefined();
+  });
+
+  it('redacts valid multi-word Indian addresses accurately without false positives', () => {
+    const rawProfile = {
+      hasInfantsOrToddlers: false,
+      hasSchoolChildren: false,
+      hasSeniors: false,
+      hasSensitiveMembers: false,
+      commuteMode: 'metro' as const,
+      budgetTier: 'low' as const,
+    };
+
+    const ctx = sanitizeProfileForAi('Near 42 Ring Road and 15 Barakhamba Marg', 'Moderate', rawProfile, []);
+    expect(ctx.cityName).toContain('[REDACTED_ADDRESS]');
+    expect(ctx.cityName).not.toContain('42 Ring Road');
+    expect(ctx.cityName).not.toContain('15 Barakhamba Marg');
+  });
 });

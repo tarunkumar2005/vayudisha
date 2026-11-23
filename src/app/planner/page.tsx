@@ -75,7 +75,7 @@ export default function PlannerPage() {
   }, [selectedCity, language, profile]);
 
   useEffect(() => {
-    fetchRecommendations();
+    void fetchRecommendations();
   }, [fetchRecommendations]);
 
   const recommendationPool = allRecommendations.length > 0 ? allRecommendations : recommendations;

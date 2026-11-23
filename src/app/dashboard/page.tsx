@@ -8,7 +8,7 @@ import { AqiGauge } from '@/components/aqi/AqiGauge';
 import { SourceBadge } from '@/components/aqi/SourceBadge';
 import { ForecastChart } from '@/components/aqi/ForecastChart';
 import { PollutantBreakdown } from '@/components/aqi/PollutantBreakdown';
-import { VayuMascot } from '@/components/brand/VayuMascot';
+import { VayuMascot, type MascotPose } from '@/components/brand/VayuMascot';
 import {
   ShieldAlert,
   Car,
@@ -24,6 +24,83 @@ import {
   Info,
 } from 'lucide-react';
 
+interface DashboardMascotState {
+  pose: MascotPose;
+  message: string;
+}
+
+function getDashboardMascotState(
+  current: { aqi: number | null; category: string; dataSource: string } | undefined,
+  isHindi: boolean
+): DashboardMascotState {
+  const isDataAvailable = Boolean(
+    current &&
+    current.dataSource !== 'unavailable' &&
+    current.category !== 'Data Unavailable' &&
+    current.category !== 'Unavailable'
+  );
+
+  if (!isDataAvailable || !current) {
+    return {
+      pose: 'thinking',
+      message: isHindi
+        ? 'डेटा लोड हो रहा है या अस्थायी रूप से अनुपलब्ध है। कृपया प्रतीक्षा करें।'
+        : 'Telemetry is updating or temporarily unavailable. Please standby.',
+    };
+  }
+
+  const currentAqi =
+    current.aqi ??
+    (current.category?.includes('Severe')
+      ? 350
+      : current.category?.includes('Very High')
+        ? 250
+        : current.category?.includes('High')
+          ? 150
+          : current.category?.includes('Moderate')
+            ? 110
+            : 40);
+
+  if (currentAqi > 300) {
+    return {
+      pose: 'alert',
+      message: isHindi
+        ? 'सावधान! गंभीर वायु प्रदूषण है। केवल आपात स्थिति में बाहर निकलें और अच्छी तरह फिटेड N95 मास्क पहनें।'
+        : 'Severe smog detected. Thermal inversion is trapping toxic particulates. Avoid outdoor cardio and use N95 respirators.',
+    };
+  }
+  if (currentAqi > 200) {
+    return {
+      pose: 'alert',
+      message: isHindi
+        ? 'वायु गुणवत्ता बहुत खराब है। बच्चों और बुजुर्गों को इनडोर रखें।'
+        : 'Very poor air quality. Keep infants and elders indoors. Run indoor air filtration.',
+    };
+  }
+  if (currentAqi > 100) {
+    return {
+      pose: 'thinking',
+      message: isHindi
+        ? 'मध्यम प्रदूषण है। दोपहर में धूप निकलने पर ही संवातन करें।'
+        : 'Moderate particulate levels. Limit prolonged morning outdoor exposure.',
+    };
+  }
+  if (currentAqi <= 50) {
+    return {
+      pose: 'celebrating',
+      message: isHindi
+        ? 'हवा साफ और ताज़ी है! बाहरी गतिविधियों और ताज़ी हवा का पूरा आनंद लें।'
+        : 'Clean, fresh air! Outdoor sports and natural ventilation are safe and refreshing.',
+    };
+  }
+  return {
+    pose: 'greeting',
+    message: isHindi
+      ? 'वायु गुणवत्ता ठीक है। आप बाहर सामान्य गतिविधियाँ कर सकते हैं।'
+      : 'Air quality is within manageable limits. Outdoor activity is suitable.',
+  };
+}
+
 export default function DashboardPage() {
   const {
     language,
@@ -38,60 +115,7 @@ export default function DashboardPage() {
 
   const isHindi = language === 'hi';
   const current = aqiData?.current;
-
-  // Derive pose based on AQI severity (H-09: Do not infer clean air or severity from missing data)
-  const isDataAvailable = Boolean(
-    current &&
-    current.dataSource !== 'unavailable' &&
-    current.category !== 'Data Unavailable' &&
-    current.category !== 'Unavailable'
-  );
-
-  let mascotPose: 'greeting' | 'thinking' | 'alert' | 'celebrating' = 'thinking';
-  let mascotMessage = isHindi
-    ? 'डेटा लोड हो रहा है या अस्थायी रूप से अनुपलब्ध है। कृपया प्रतीक्षा करें।'
-    : 'Telemetry is updating or temporarily unavailable. Please standby.';
-
-  if (isDataAvailable && current) {
-    const currentAqi =
-      current.aqi ??
-      (current.category?.includes('Severe')
-        ? 350
-        : current.category?.includes('Very High')
-          ? 250
-          : current.category?.includes('High')
-            ? 150
-            : current.category?.includes('Moderate')
-              ? 110
-              : 40);
-
-    if (currentAqi > 300) {
-      mascotPose = 'alert';
-      mascotMessage = isHindi
-        ? 'सावधान! गंभीर वायु प्रदूषण है। केवल आपात स्थिति में बाहर निकलें और अच्छी तरह फिटेड N95 मास्क पहनें।'
-        : 'Severe smog detected. Thermal inversion is trapping toxic particulates. Avoid outdoor cardio and use N95 respirators.';
-    } else if (currentAqi > 200) {
-      mascotPose = 'alert';
-      mascotMessage = isHindi
-        ? 'वायु गुणवत्ता बहुत खराब है। बच्चों और बुजुर्गों को इनडोर रखें।'
-        : 'Very poor air quality. Keep infants and elders indoors. Run indoor air filtration.';
-    } else if (currentAqi > 100) {
-      mascotPose = 'thinking';
-      mascotMessage = isHindi
-        ? 'मध्यम प्रदूषण है। दोपहर में धूप निकलने पर ही संवातन करें।'
-        : 'Moderate particulate levels. Limit prolonged morning outdoor exposure.';
-    } else if (currentAqi <= 50) {
-      mascotPose = 'celebrating';
-      mascotMessage = isHindi
-        ? 'हवा साफ और ताज़ी है! बाहरी गतिविधियों और ताज़ी हवा का पूरा आनंद लें।'
-        : 'Clean, fresh air! Outdoor sports and natural ventilation are safe and refreshing.';
-    } else {
-      mascotPose = 'greeting';
-      mascotMessage = isHindi
-        ? 'वायु गुणवत्ता ठीक है। आप बाहर सामान्य गतिविधियाँ कर सकते हैं।'
-        : 'Air quality is within manageable limits. Outdoor activity is suitable.';
-    }
-  }
+  const { pose: mascotPose, message: mascotMessage } = getDashboardMascotState(current, isHindi);
 
   return (
     <div className="space-y-8 sm:space-y-12">
@@ -164,7 +188,7 @@ export default function DashboardPage() {
                   onChange={(e) => {
                     const val = e.target.value;
                     setSelectedStation(val);
-                    refreshAqi(val);
+                    void refreshAqi(val);
                   }}
                   className="px-3.5 py-2.5 rounded-xl bg-[#F6F4EB] border border-[#E2DDD1] text-xs font-bold text-[#174B36] focus:outline-none focus:ring-2 focus:ring-[#0F766E] max-w-[220px] truncate"
                 >
@@ -272,7 +296,7 @@ export default function DashboardPage() {
                       key={st.station}
                       onClick={() => {
                         setSelectedStation(st.station);
-                        refreshAqi(st.station);
+                        void refreshAqi(st.station);
                       }}
                       className={`text-left p-3.5 rounded-2xl border transition-all ${
                         isCurrent

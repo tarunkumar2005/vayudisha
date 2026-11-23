@@ -37,7 +37,8 @@ export default function CommunityPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const timer = setTimeout(async () => {
+
+    const fetchCommunityPlan = async () => {
       setIsLoading(true);
       try {
         const res = await fetch('/api/community', {
@@ -63,6 +64,10 @@ export default function CommunityPage() {
       } finally {
         setIsLoading(false);
       }
+    };
+
+    const timer = setTimeout(() => {
+      void fetchCommunityPlan();
     }, 400);
 
     return () => {
@@ -77,11 +82,16 @@ export default function CommunityPage() {
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch (err) {
+        console.warn('Clipboard write failed:', err);
+        setCopied(false);
+      }
     }
   };
 

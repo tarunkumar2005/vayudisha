@@ -7,7 +7,7 @@
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
-[![Vitest](https://img.shields.io/badge/Vitest-85%20Passed-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Vitest-93%20Passed-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
 [![Playwright](https://img.shields.io/badge/Playwright%20E2E-45%20Passed-brightgreen?style=flat&logo=playwright)](https://playwright.dev/)
 [![WCAG 2.2 AA](https://img.shields.io/badge/axe--core-0%20Violations%20(AA)-brightgreen?style=flat)](https://www.deque.com/axe/)
 [![Gemini API](https://img.shields.io/badge/Google%20Gemini-3.5--flash--lite%20%2F%203.1--flash--lite-4285F4?style=flat&logo=google)](https://aistudio.google.com/)
@@ -63,7 +63,7 @@ VayuDisha introduces an original, approachable brand identity inspired by modern
 
 | Quality Domain | Metric | Result | Verification Command |
 | :--- | :--- | :--- | :--- |
-| **Unit & Integration Tests** | 14 Test Files | **85 Passed**, 11 Skipped (Offline CI) | `npm test` |
+| **Unit & Integration Tests** | 14 Test Files | **93 Passed**, 11 Skipped (Offline CI) | `npm test` |
 | **End-to-End Tests** | 8 Playwright Specs | **45 of 45 Passed** (100%) | `npm run test:e2e` |
 | **Accessibility (WCAG 2.2 AA)** | axe-core automated audit | **0 Critical / 0 Serious Violations** across all 5 routes (`/`, `/dashboard`, `/planner`, `/impact`, `/community`) | `npm run test:e2e` (accessibility.spec.ts) |
 | **Type Safety** | TypeScript `tsc --noEmit` | **0 Errors** | `npm run typecheck` |

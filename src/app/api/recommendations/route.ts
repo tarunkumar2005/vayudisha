@@ -40,7 +40,7 @@ const RequestSchema = z.object({
 export async function POST(request: NextRequest) {
   // 1. Enforce payload size limit
   const contentLength = request.headers.get('content-length');
-  if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+  if (contentLength && Number.parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
     return NextResponse.json(
       { error: 'Payload too large. Maximum allowed size is 32 KB.' },
       { status: 413, headers: { 'Cache-Control': 'no-store' } }

@@ -157,7 +157,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    refreshAqi();
+    void refreshAqi();
   }, [refreshAqi]);
 
   return (

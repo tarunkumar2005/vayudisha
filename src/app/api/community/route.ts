@@ -95,7 +95,7 @@ const MAX_PAYLOAD_BYTES = 32 * 1024; // 32 KB payload cap
 
 export async function POST(request: NextRequest) {
   const contentLength = request.headers.get('content-length');
-  if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+  if (contentLength && Number.parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
     return NextResponse.json(
       { error: 'Payload too large. Maximum allowed size is 32 KB.' },
       { status: 413, headers: { 'Cache-Control': 'no-store' } }

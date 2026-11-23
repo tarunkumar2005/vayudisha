@@ -39,7 +39,7 @@ function stripPiiAndInjections(str: string): string {
     .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[REDACTED_EMAIL]')
     .replace(/\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, '[REDACTED_PHONE]')
     .replace(
-      /\b\d{1,5}\s+[A-Za-z0-9\s.,#-]+(?:Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Nagar|Colony|Sector|Marg)\b/gi,
+      /\b\d{1,5}\s+(?:[A-Za-z0-9.,#-]+\s+){1,4}(?:Street|Road|Avenue|Lane|Drive|Nagar|Colony|Sector|Marg|St|Rd|Ave|Ln|Dr)\b/gi,
       '[REDACTED_ADDRESS]'
     )
     .replace(/(?:system|assistant|instruction|prompt)\s*:/gi, '')
